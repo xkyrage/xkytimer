@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speedcube Timer</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        #scramble {
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            margin-bottom: 3rem;
+            text-align: center;
+            max-width: 800px;
+            color: #4da6ff;
+        }
+
+        #timer {
+            font-size: 8rem;
+            font-weight: bold;
+            font-variant-numeric: tabular-nums; /* Keeps numbers from shifting */
+            margin-bottom: 2rem;
+            transition: color 0.1s;
+        }
+
+        /* Timer colors for state feedback */
+        .ready { color: #00e676 !important; }
+        .stopped { color: #ff5252 !important; }
+
+        #times-container {
+            width: 100%;
+            max-width: 400px;
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        #times-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        #times-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem;
+            border-bottom: 1px solid #333;
+            font-size: 1.2rem;
+        }
+
+        .hint {
+            color: #888;
+            margin-bottom: 2rem;
+        }
+
+        footer {
+            margin-top: auto;
+            padding-top: 2rem;
+            color: #666;
+            font-size: 0.85rem;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="scramble">Generating scramble...</div>
+    <div id="timer">0.000</div>
+    <div class="hint">Hold Spacebar to ready, release to start. Press any key to stop.</div>
+
+    <div id="times-container">
+        <h3 style="margin-top: 0;">Recent Solves</h3>
+        <ul id="times-list"></ul>
+    </div>
+
+    <footer>Tegar Ibrahim - xkyrage . xkytimer @2026</footer>
+
+    <script>
+        const timerDisplay = document.getElementById('timer');
+        const scrambleDisplay = document.getElementById('scramble');
+        const timesList = document.getElementById('times-list');
+
+        let state = 'idle'; // idle -> ready -> running
+        let startTime;
+        let animationFrameId;
+        let solveNumber = 1;
+
+        // Generate a basic 20-move 3x3 scramble
+        function generateScramble() {
+            const faces = ['U', 'D', 'L', 'R', 'F', 'B'];
+            const modifiers = ['', "'", '2'];
+            let scramble = [];
+            let lastFace = '';
+
+            for (let i = 0; i < 20; i++) {
+                let face;
+                // Prevent consecutive moves on the same face (e.g., U U2)
+                do {
+                    face = faces[Math.floor(Math.random() * faces.length)];
+                } while (face === lastFace);
+                
+                lastFace = face;
+                let modifier = modifiers[Math.floor(Math.random() * modifiers.length)];
+                scramble.push(face + modifier);
+            }
+            return scramble.join(' ');
+        }
+
+        function updateScramble() {
+            scrambleDisplay.textContent = generateScramble();
+        }
+
+        function formatTime(ms) {
+            let totalSeconds = ms / 1000;
+            let minutes = Math.floor(totalSeconds / 60);
+            let seconds = Math.floor(totalSeconds % 60);
+            let milliseconds = Math.floor((ms % 1000));
+
+            let timeString = '';
+            if (minutes > 0) {
+                timeString += `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                timeString += `${seconds}`;
+            }
+            timeString += `.${milliseconds.toString().padStart(3, '0')}`;
+            return timeString;
+        }
+
+        function updateTimer() {
+            const currentTime = performance.now() - startTime;
+            timerDisplay.textContent = formatTime(currentTime);
+            animationFrameId = requestAnimationFrame(updateTimer);
+        }
+
+        function addTimeToList(timeString) {
+            const li = document.createElement('li');
+            li.innerHTML = `<span>Solve ${solveNumber}</span> <span>${timeString}</span>`;
+            timesList.prepend(li);
+            solveNumber++;
+        }
+
+        // --- Event Listeners ---
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault(); // Prevent page scrolling
+                
+                if (state === 'idle') {
+                    state = 'ready';
+                    timerDisplay.classList.add('ready');
+                    timerDisplay.classList.remove('stopped');
+                    timerDisplay.textContent = '0.000';
+                }
+            }
+            
+            // Stop timer on any key press if running
+            if (state === 'running') {
+                state = 'idle';
+                cancelAnimationFrame(animationFrameId);
+                const finalTime = performance.now() - startTime;
+                const formattedFinal = formatTime(finalTime);
+                
+                timerDisplay.textContent = formattedFinal;
+                timerDisplay.classList.add('stopped');
+                
+                addTimeToList(formattedFinal);
+                updateScramble();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space' && state === 'ready') {
+                state = 'running';
+                timerDisplay.classList.remove('ready');
+                startTime = performance.now();
+                animationFrameId = requestAnimationFrame(updateTimer);
+            }
+        });
+
+        // Initialize first scramble
+        updateScramble();
+    </script>
+</body>
+</html>
