@@ -18,6 +18,13 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            
+            /* Add these lines to prevent selection */
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* IE10+/Edge */
+            user-select: none;         /* Standard */
+            -webkit-touch-callout: none; /* Disable iOS touch callouts */
         }
 
         header {
@@ -679,6 +686,25 @@
                 handleTimerStart();
             }
         }, { passive: false });
+
+        // --- Prevent Default Browser Behaviors ---
+        
+        // Disable right-click context menu
+        window.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+        });
+
+        // Disable dragging elements (like images or text blocks)
+        window.addEventListener('dragstart', function (e) {
+            e.preventDefault();
+        });
+
+        // Disable keyboard shortcuts for selecting all (Ctrl+A) and copying (Ctrl+C)
+        window.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'c' || e.key === 'x')) {
+                e.preventDefault();
+            }
+        });
 
         init();
     </script>
