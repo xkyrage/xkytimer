@@ -2,7 +2,7 @@
 
 xkytimer is a lightweight, browser-based speedcubing timer. It is designed to be fast, accurate, and easy to use, utilizing native JavaScript performance APIs to ensure millisecond-precise timing.
 
-[![Sponsor on GitHub](https://dabuttonfactory.com/button.png?t=Click+To+Try&f=Roboto-Bold&ts=28&tc=fff&hp=45&vp=20&w=1000&h=50&c=11&bgt=unicolored&bgc=f00)](https://xkyrage.github.io/xkytimer/)
+[![Sponsor on GitHub](https://dabuttonfactory.com/button.png?t=Click+To+Try&f=Roboto-Bold&ts=28&tc=fff&hp=45&vp=20&w=1000&h=50&c=11&bgt=unicolored&bgc=f00)](https://xkyrage.github.io/xkytimer-speedcube-timer/)
 
 ## Features
 
