@@ -1,2 +1,18 @@
 # xkytimer
+
 xkytimer is a lightweight, browser-based speedcubing timer. It is designed to be fast, accurate, and easy to use, utilizing native JavaScript performance APIs to ensure millisecond-precise timing.
+
+## Features
+
+* **Precision Timing:** Uses `performance.now()` and `requestAnimationFrame()` to prevent time drift and ensure highly accurate solve times.
+* **WCA-Style Scrambles:** Automatically generates 20-move 3x3 scrambles, preventing consecutive moves on the same face.
+* **Session Tracking:** Records and displays your recent solve times in a local list.
+* **Zero Dependencies:** Built entirely with vanilla HTML, CSS, and JavaScript. No frameworks or external libraries required.
+
+## Usage
+
+### Installation
+1. Clone the repository or download the source code.
+   
+```bash
+   git clone [https://github.com/yourusername/xkytimer.git](https://github.com/yourusername/xkytimer.git)
