@@ -3,9 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" sizes="32x32" href="asset/favicon.png">
-    <title>XKYTIMER - Speedcube Trainer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xkytimer - Speedcube Trainer</title>
     <style>
         body {
             background-color: #121212;
@@ -23,45 +23,31 @@
         header {
             width: 100%;
             background-color: #0f141e;
-            /* Changed horizontal padding to 0 so the text scrolls edge-to-edge seamlessly */
             padding: 1rem 0;
             box-sizing: border-box;
             border-bottom: 1px solid #1e293b;
             margin-bottom: 3rem;
-            display: flex;
-            align-items: center;
             overflow: hidden;
-            /* Hides the text when it goes outside the header */
+            white-space: nowrap;
         }
 
         .header-title {
+            display: inline-block;
             font-size: 1.1rem;
             font-weight: bold;
             color: #ffffff;
             margin: 0;
             letter-spacing: 0.5px;
-
-            /* Marquee-specific properties */
-            white-space: nowrap;
-            /* Forces the text to stay on one single line */
-            flex-shrink: 0;
-            /* Prevents flexbox from squishing the text */
-            padding-left: 100%;
-            /* Pushes the start position to the right edge */
-            animation: scroll-left 10s linear infinite;
-            /* 10s is the speed */
+            animation: marquee 12s linear infinite;
         }
 
-        /* The animation sequence */
-        @keyframes scroll-left {
+        @keyframes marquee {
             0% {
-                transform: translateX(0);
-                /* Starts at the right edge (due to padding-left) */
+                transform: translateX(100vw);
             }
 
             100% {
                 transform: translateX(-100%);
-                /* Moves completely off-screen to the left */
             }
         }
 
@@ -121,7 +107,6 @@
             border-color: #222;
         }
 
-        /* Danger button styling for Clear Session */
         .btn-danger:hover {
             background: #4a1a1a;
             border-color: #ff5252;
@@ -141,12 +126,14 @@
         }
 
         .stopped {
-            color: #b3ff00 !important;
+            color: #88ff00 !important;
         }
 
         .hint {
             color: #888;
             margin-bottom: 2rem;
+            text-align: center;
+            padding: 0 1rem;
         }
 
         .stats-container {
@@ -157,6 +144,9 @@
             padding: 1rem 2rem;
             border-radius: 8px;
             border: 1px solid #333;
+            flex-wrap: wrap;
+            /* Allows wrapping on very small screens */
+            justify-content: center;
         }
 
         .stat-box {
@@ -194,6 +184,38 @@
             border-radius: 8px;
             padding: 1rem;
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #best-history-highlight {
+            background: #151a15;
+            border: 1px solid #00e676;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .best-highlight-title {
+            font-size: 0.8rem;
+            color: #00e676;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 0.5rem 0;
+            font-weight: bold;
+        }
+
+        .best-highlight-data {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.3rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .best-highlight-time {
+            color: #00e676;
+            font-weight: bold;
         }
 
         #times-list {
@@ -228,7 +250,7 @@
             margin-top: auto;
             padding-top: 2rem;
             padding-bottom: 1rem;
-            color: #ffffff;
+            color: #666;
             font-size: 0.85rem;
             text-align: center;
             letter-spacing: 1px;
@@ -239,7 +261,7 @@
 <body>
 
     <header>
-        <h1 class="header-title">XKYTIMER - PROFESSIONAL SPEEDCUBE TRAINER</h1>
+        <h1 class="header-title">XkyTIMER - Professional Speedcube Timer and Trainer</h1>
     </header>
 
     <div class="scramble-section">
@@ -252,12 +274,16 @@
     </div>
 
     <div id="timer">0.000</div>
-    <div class="hint">Hold Spacebar to ready, release to start. Press any key to stop.</div>
+    <div class="hint">Hold Spacebar or touch the screen to ready, release to start. Press any key or tap to stop.</div>
 
     <div class="stats-container">
         <div class="stat-box">
             <div class="stat-label">Session Best</div>
             <div class="stat-value" id="session-best">--</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Session Avg</div>
+            <div class="stat-value" id="session-average">--</div>
         </div>
         <div class="stat-box">
             <div class="stat-label">All-Time Best</div>
@@ -274,6 +300,16 @@
 
     <div id="times-container">
         <h3 style="margin-top: 0; margin-bottom: 1rem;">Solve History</h3>
+
+        <div id="best-history-highlight">
+            <div class="best-highlight-title">Personal Best Record</div>
+            <div class="best-highlight-data">
+                <span id="best-history-label">Solve --</span>
+                <span id="best-history-time" class="best-highlight-time">--</span>
+            </div>
+            <div id="best-history-scramble" class="solve-scramble">--</div>
+        </div>
+
         <ul id="times-list"></ul>
     </div>
 
@@ -281,8 +317,9 @@
         Built by <strong><a href="https://github.com/xkyrage" target="_blank"
                 style="color: white; text-decoration: none;">
                 Tegar Ibrahim
-            </a></strong> — xkyrage · xkytimer - Professional Speedcube Trainer © 2026
+            </a></strong> - xkyrage · xkytimer - Professional Speedcube Trainer © 2026
     </footer>
+
 
     <script>
         // --- Core Variables ---
@@ -290,8 +327,10 @@
         const scrambleDisplay = document.getElementById('scramble');
         const timesList = document.getElementById('times-list');
         const sessionBestDisplay = document.getElementById('session-best');
+        const sessionAverageDisplay = document.getElementById('session-average'); // New Variable
         const allTimeBestDisplay = document.getElementById('all-time-best');
         const btnPrevScramble = document.getElementById('btn-prev-scramble');
+        const bestHistoryHighlight = document.getElementById('best-history-highlight');
 
         let state = 'idle'; // idle -> ready -> running
         let startTime;
@@ -373,7 +412,7 @@
 
         // --- Formatting & Stats ---
         function formatTime(ms) {
-            if (!ms || ms === Infinity) return '--';
+            if (!ms || ms === Infinity || isNaN(ms)) return '--';
             let totalSeconds = ms / 1000;
             let minutes = Math.floor(totalSeconds / 60);
             let seconds = Math.floor(totalSeconds % 60);
@@ -384,17 +423,54 @@
             return timeString;
         }
 
+        function updateBestHistoryHighlight() {
+            if (!bestHistoryHighlight) return;
+            if (allSolves.length === 0) {
+                bestHistoryHighlight.style.display = 'none';
+                return;
+            }
+
+            let bestSolve = allSolves[0];
+            let bestSolveIndex = 0;
+
+            for (let i = 1; i < allSolves.length; i++) {
+                if (allSolves[i].timeMs < bestSolve.timeMs) {
+                    bestSolve = allSolves[i];
+                    bestSolveIndex = i;
+                }
+            }
+
+            const solveNum = bestSolveIndex + 1;
+
+            document.getElementById('best-history-label').textContent = `Solve ${solveNum}`;
+            document.getElementById('best-history-time').textContent = bestSolve.timeStr;
+            document.getElementById('best-history-scramble').textContent = bestSolve.scramble;
+
+            bestHistoryHighlight.style.display = 'block';
+        }
+
         function updateStatsUI() {
+            // Find minimums
             const sessionMin = sessionSolves.length > 0 ? Math.min(...sessionSolves.map(s => s.timeMs)) : Infinity;
             const allTimeMin = allSolves.length > 0 ? Math.min(...allSolves.map(s => s.timeMs)) : Infinity;
 
+            // Calculate Session Average
+            let sessionAvg = Infinity;
+            if (sessionSolves.length > 0) {
+                const totalMs = sessionSolves.reduce((sum, solve) => sum + solve.timeMs, 0);
+                sessionAvg = totalMs / sessionSolves.length;
+            }
+
+            // Update UI
             sessionBestDisplay.textContent = sessionMin !== Infinity ? formatTime(sessionMin) : '--';
+            sessionAverageDisplay.textContent = sessionAvg !== Infinity ? formatTime(sessionAvg) : '--';
             allTimeBestDisplay.textContent = allTimeMin !== Infinity ? formatTime(allTimeMin) : '--';
+
+            updateBestHistoryHighlight();
         }
 
         function renderSolveHistory() {
             timesList.innerHTML = '';
-            // Render from newest to oldest
             const displaySolves = [...allSolves].reverse();
 
             displaySolves.forEach((solve, index) => {
@@ -412,7 +488,39 @@
             });
         }
 
-        // --- Timer Logic ---
+        // --- Timer Control Functions ---
+        function handleTimerReady() {
+            if (state === 'idle') {
+                state = 'ready';
+                timerDisplay.classList.add('ready');
+                timerDisplay.classList.remove('stopped');
+                timerDisplay.textContent = '0.000';
+            }
+        }
+
+        function handleTimerStart() {
+            if (state === 'ready') {
+                state = 'running';
+                timerDisplay.classList.remove('ready');
+                startTime = performance.now();
+                animationFrameId = requestAnimationFrame(updateTimer);
+            }
+        }
+
+        function handleTimerStop() {
+            if (state === 'running') {
+                state = 'idle';
+                cancelAnimationFrame(animationFrameId);
+                const finalTimeMs = performance.now() - startTime;
+                const formattedFinal = formatTime(finalTimeMs);
+
+                timerDisplay.textContent = formattedFinal;
+                timerDisplay.classList.add('stopped');
+
+                recordSolve(finalTimeMs, formattedFinal);
+            }
+        }
+
         function updateTimer() {
             const currentTime = performance.now() - startTime;
             timerDisplay.textContent = formatTime(currentTime);
@@ -435,7 +543,6 @@
             updateStatsUI();
             renderSolveHistory();
 
-            // Auto-generate next scramble after a solve
             navigateScramble(1);
         }
 
@@ -476,22 +583,18 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            // Security: Reset input value so same file can be selected again if needed
             event.target.value = '';
 
-            // Security: Rate Limit (5 seconds)
             const now = Date.now();
             if (now - lastImportTime < IMPORT_COOLDOWN_MS) {
                 return alert("Please wait a few seconds before importing again.");
             }
             lastImportTime = now;
 
-            // Security: File extension check
             if (!file.name.toLowerCase().endsWith('.txt')) {
                 return alert("Security Error: Only .txt files are allowed.");
             }
 
-            // Security: File size limit (max 1MB to prevent memory crash on malicious files)
             if (file.size > 1024 * 1024) {
                 return alert("Security Error: File is too large (max 1MB).");
             }
@@ -504,7 +607,6 @@
                         throw new Error("Invalid format");
                     }
 
-                    // Merge imported solves with existing ones, avoiding exact ID duplicates
                     const existingIds = new Set(allSolves.map(s => s.id));
                     let addedCount = 0;
 
@@ -516,7 +618,6 @@
                     });
 
                     if (addedCount > 0) {
-                        // Sort all solves by ID (timestamp) to maintain correct order
                         allSolves.sort((a, b) => a.id - b.id);
                         saveToLocalStorage();
                         updateStatsUI();
@@ -533,46 +634,52 @@
             reader.readAsText(file);
         }
 
-        // --- Event Listeners ---
+        // --- Input Event Listeners (Keyboard & Touch) ---
+        function isInteractiveElement(element) {
+            return element.tagName === 'BUTTON' ||
+                element.tagName === 'INPUT' ||
+                element.closest('button') !== null;
+        }
+
         window.addEventListener('keydown', (e) => {
-            // Ignore keystrokes if typing in an input
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
             if (e.code === 'Space') {
                 e.preventDefault();
-
-                if (state === 'idle') {
-                    state = 'ready';
-                    timerDisplay.classList.add('ready');
-                    timerDisplay.classList.remove('stopped');
-                    timerDisplay.textContent = '0.000';
-                }
+                handleTimerReady();
             }
 
-            // Stop timer on any key press if running
             if (state === 'running') {
-                state = 'idle';
-                cancelAnimationFrame(animationFrameId);
-                const finalTimeMs = performance.now() - startTime;
-                const formattedFinal = formatTime(finalTimeMs);
-
-                timerDisplay.textContent = formattedFinal;
-                timerDisplay.classList.add('stopped');
-
-                recordSolve(finalTimeMs, formattedFinal);
+                handleTimerStop();
             }
         });
 
         window.addEventListener('keyup', (e) => {
-            if (e.code === 'Space' && state === 'ready') {
-                state = 'running';
-                timerDisplay.classList.remove('ready');
-                startTime = performance.now();
-                animationFrameId = requestAnimationFrame(updateTimer);
+            if (e.code === 'Space') {
+                handleTimerStart();
             }
         });
 
-        // Start the application
+        window.addEventListener('touchstart', (e) => {
+            if (isInteractiveElement(e.target)) return;
+
+            if (state === 'idle') {
+                handleTimerReady();
+            } else if (state === 'running') {
+                e.preventDefault();
+                handleTimerStop();
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', (e) => {
+            if (isInteractiveElement(e.target)) return;
+
+            if (state === 'ready') {
+                e.preventDefault();
+                handleTimerStart();
+            }
+        }, { passive: false });
+
         init();
     </script>
 </body>
