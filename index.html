@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,55 +13,134 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            padding: 2rem;
+            padding: 0;
             box-sizing: border-box;
+        }
+
+        header {
+            width: 100%;
+            background-color: #0f141e;
+            /* Changed horizontal padding to 0 so the text scrolls edge-to-edge seamlessly */
+            padding: 1rem 0;
+            box-sizing: border-box;
+            border-bottom: 1px solid #1e293b;
+            margin-bottom: 3rem;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            /* Hides the text when it goes outside the header */
+        }
+
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ffffff;
+            margin: 0;
+            letter-spacing: 0.5px;
+
+            /* Marquee-specific properties */
+            white-space: nowrap;
+            /* Forces the text to stay on one single line */
+            flex-shrink: 0;
+            /* Prevents flexbox from squishing the text */
+            padding-left: 100%;
+            /* Pushes the start position to the right edge */
+            animation: scroll-left 10s linear infinite;
+            /* 10s is the speed */
+        }
+
+        /* The animation sequence */
+        @keyframes scroll-left {
+            0% {
+                transform: translateX(0);
+                /* Starts at the right edge (due to padding-left) */
+            }
+
+            100% {
+                transform: translateX(-100%);
+                /* Moves completely off-screen to the left */
+            }
+        }
+
+        .scramble-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+            width: 100%;
+            max-width: 800px;
+            padding: 0 1rem;
+        }
+
+        .scramble-label {
+            font-size: 0.9rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+        }
+
+        .scramble-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            justify-content: center;
         }
 
         #scramble {
             font-size: 1.5rem;
             letter-spacing: 2px;
-            margin-bottom: 3rem;
             text-align: center;
-            max-width: 800px;
             color: #4da6ff;
+            min-width: 400px;
+        }
+
+        button {
+            background: #2a2a2a;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        button:hover {
+            background: #3a3a3a;
+        }
+
+        button:disabled {
+            background: #1a1a1a;
+            color: #555;
+            cursor: not-allowed;
+            border-color: #222;
+        }
+
+        /* Danger button styling for Clear Session */
+        .btn-danger:hover {
+            background: #4a1a1a;
+            border-color: #ff5252;
+            color: #ffdddd;
         }
 
         #timer {
             font-size: 8rem;
             font-weight: bold;
-            font-variant-numeric: tabular-nums; /* Keeps numbers from shifting */
-            margin-bottom: 2rem;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 1rem;
             transition: color 0.1s;
         }
 
-        /* Timer colors for state feedback */
-        .ready { color: #00e676 !important; }
-        .stopped { color: #ff5252 !important; }
-
-        #times-container {
-            width: 100%;
-            max-width: 400px;
-            background: #1e1e1e;
-            border-radius: 8px;
-            padding: 1rem;
+        .ready {
+            color: #00e676 !important;
         }
 
-        #times-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        #times-list li {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.5rem;
-            border-bottom: 1px solid #333;
-            font-size: 1.2rem;
+        .stopped {
+            color: #b3ff00 !important;
         }
 
         .hint {
@@ -68,40 +148,196 @@
             margin-bottom: 2rem;
         }
 
+        .stats-container {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            background: #1a1a1a;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #aaa;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00e676;
+        }
+
+        #data-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            width: 100%;
+            max-width: 600px;
+            justify-content: flex-end;
+            padding: 0 1rem;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+        }
+
+        #times-container {
+            width: 100%;
+            max-width: 600px;
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        #times-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        #times-list li {
+            display: flex;
+            flex-direction: column;
+            padding: 0.75rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .solve-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .solve-scramble {
+            font-size: 0.8rem;
+            color: #666;
+            word-break: break-all;
+        }
+
         footer {
             margin-top: auto;
             padding-top: 2rem;
-            color: #666;
+            padding-bottom: 1rem;
+            color: #ffffff;
             font-size: 0.85rem;
             text-align: center;
             letter-spacing: 1px;
         }
     </style>
 </head>
+
 <body>
 
-    <div id="scramble">Generating scramble...</div>
+    <header>
+        <h1 class="header-title">XKYTIMER - PROFESSIONAL SPEEDCUBE TRAINER</h1>
+    </header>
+
+    <div class="scramble-section">
+        <div class="scramble-label">Scramble</div>
+        <div class="scramble-container">
+            <button id="btn-prev-scramble" onclick="navigateScramble(-1)" disabled>&lt; Prev</button>
+            <div id="scramble">Loading...</div>
+            <button id="btn-next-scramble" onclick="navigateScramble(1)">Next &gt;</button>
+        </div>
+    </div>
+
     <div id="timer">0.000</div>
     <div class="hint">Hold Spacebar to ready, release to start. Press any key to stop.</div>
 
+    <div class="stats-container">
+        <div class="stat-box">
+            <div class="stat-label">Session Best</div>
+            <div class="stat-value" id="session-best">--</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">All-Time Best</div>
+            <div class="stat-value" id="all-time-best">--</div>
+        </div>
+    </div>
+
+    <div id="data-controls">
+        <button class="btn-danger" onclick="clearSession()">Clear Session</button>
+        <button onclick="exportData()">Export Data (.txt)</button>
+        <button onclick="document.getElementById('import-file').click()">Import Data</button>
+        <input type="file" id="import-file" accept=".txt" style="display: none;" onchange="importData(event)">
+    </div>
+
     <div id="times-container">
-        <h3 style="margin-top: 0;">Recent Solves</h3>
+        <h3 style="margin-top: 0; margin-bottom: 1rem;">Solve History</h3>
         <ul id="times-list"></ul>
     </div>
 
-    <footer>Tegar Ibrahim - xkyrage . xkytimer @2026</footer>
+    <footer class="footer">
+        Built by <strong><a href="https://github.com/xkyrage" target="_blank"
+                style="color: white; text-decoration: none;">
+                Tegar Ibrahim
+            </a></strong> — xkyrage · xkytimer - Professional Speedcube Trainer © 2026
+    </footer>
 
     <script>
+        // --- Core Variables ---
         const timerDisplay = document.getElementById('timer');
         const scrambleDisplay = document.getElementById('scramble');
         const timesList = document.getElementById('times-list');
+        const sessionBestDisplay = document.getElementById('session-best');
+        const allTimeBestDisplay = document.getElementById('all-time-best');
+        const btnPrevScramble = document.getElementById('btn-prev-scramble');
 
         let state = 'idle'; // idle -> ready -> running
         let startTime;
         let animationFrameId;
-        let solveNumber = 1;
 
-        // Generate a basic 20-move 3x3 scramble
+        let allSolves = [];
+        let sessionSolves = [];
+
+        // Scramble Management
+        let scramblesHistory = [];
+        let currentScrambleIndex = -1;
+
+        // Security / Rate Limit
+        let lastImportTime = 0;
+        const IMPORT_COOLDOWN_MS = 5000; // 5 seconds
+
+        // --- Initialization ---
+        function init() {
+            loadFromLocalStorage();
+            updateStatsUI();
+            renderSolveHistory();
+            navigateScramble(1); // Generate first scramble
+
+            // Prevent buttons from keeping focus so Spacebar works for timer
+            document.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', function () { this.blur(); });
+            });
+        }
+
+        // --- Storage & Data Management ---
+        function loadFromLocalStorage() {
+            try {
+                const stored = localStorage.getItem('xkytimer_solves');
+                if (stored) {
+                    allSolves = JSON.parse(stored);
+                }
+            } catch (e) {
+                console.error("Failed to load solves from local storage", e);
+                allSolves = [];
+            }
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('xkytimer_solves', JSON.stringify(allSolves));
+        }
+
+        // --- Scramble Generation ---
         function generateScramble() {
             const faces = ['U', 'D', 'L', 'R', 'F', 'B'];
             const modifiers = ['', "'", '2'];
@@ -110,11 +346,7 @@
 
             for (let i = 0; i < 20; i++) {
                 let face;
-                // Prevent consecutive moves on the same face (e.g., U U2)
-                do {
-                    face = faces[Math.floor(Math.random() * faces.length)];
-                } while (face === lastFace);
-                
+                do { face = faces[Math.floor(Math.random() * faces.length)]; } while (face === lastFace);
                 lastFace = face;
                 let modifier = modifiers[Math.floor(Math.random() * modifiers.length)];
                 scramble.push(face + modifier);
@@ -122,45 +354,192 @@
             return scramble.join(' ');
         }
 
-        function updateScramble() {
-            scrambleDisplay.textContent = generateScramble();
+        function navigateScramble(direction) {
+            if (direction === 1) {
+                // Next
+                currentScrambleIndex++;
+                if (currentScrambleIndex >= scramblesHistory.length) {
+                    scramblesHistory.push(generateScramble());
+                }
+            } else if (direction === -1) {
+                // Prev
+                if (currentScrambleIndex > 0) currentScrambleIndex--;
+            }
+
+            scrambleDisplay.textContent = scramblesHistory[currentScrambleIndex];
+            btnPrevScramble.disabled = currentScrambleIndex === 0;
         }
 
+        // --- Formatting & Stats ---
         function formatTime(ms) {
+            if (!ms || ms === Infinity) return '--';
             let totalSeconds = ms / 1000;
             let minutes = Math.floor(totalSeconds / 60);
             let seconds = Math.floor(totalSeconds % 60);
             let milliseconds = Math.floor((ms % 1000));
 
-            let timeString = '';
-            if (minutes > 0) {
-                timeString += `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            } else {
-                timeString += `${seconds}`;
-            }
+            let timeString = minutes > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${seconds}`;
             timeString += `.${milliseconds.toString().padStart(3, '0')}`;
             return timeString;
         }
 
+        function updateStatsUI() {
+            const sessionMin = sessionSolves.length > 0 ? Math.min(...sessionSolves.map(s => s.timeMs)) : Infinity;
+            const allTimeMin = allSolves.length > 0 ? Math.min(...allSolves.map(s => s.timeMs)) : Infinity;
+
+            sessionBestDisplay.textContent = sessionMin !== Infinity ? formatTime(sessionMin) : '--';
+            allTimeBestDisplay.textContent = allTimeMin !== Infinity ? formatTime(allTimeMin) : '--';
+        }
+
+        function renderSolveHistory() {
+            timesList.innerHTML = '';
+            // Render from newest to oldest
+            const displaySolves = [...allSolves].reverse();
+
+            displaySolves.forEach((solve, index) => {
+                const li = document.createElement('li');
+                const solveNum = displaySolves.length - index;
+
+                li.innerHTML = `
+                    <div class="solve-header">
+                        <span>Solve ${solveNum}</span>
+                        <span style="color: #00e676; font-weight: bold;">${solve.timeStr}</span>
+                    </div>
+                    <div class="solve-scramble">${solve.scramble}</div>
+                `;
+                timesList.appendChild(li);
+            });
+        }
+
+        // --- Timer Logic ---
         function updateTimer() {
             const currentTime = performance.now() - startTime;
             timerDisplay.textContent = formatTime(currentTime);
             animationFrameId = requestAnimationFrame(updateTimer);
         }
 
-        function addTimeToList(timeString) {
-            const li = document.createElement('li');
-            li.innerHTML = `<span>Solve ${solveNumber}</span> <span>${timeString}</span>`;
-            timesList.prepend(li);
-            solveNumber++;
+        function recordSolve(finalTimeMs, formattedFinal) {
+            const solveData = {
+                id: Date.now(),
+                timeMs: finalTimeMs,
+                timeStr: formattedFinal,
+                scramble: scramblesHistory[currentScrambleIndex],
+                date: new Date().toISOString()
+            };
+
+            sessionSolves.push(solveData);
+            allSolves.push(solveData);
+
+            saveToLocalStorage();
+            updateStatsUI();
+            renderSolveHistory();
+
+            // Auto-generate next scramble after a solve
+            navigateScramble(1);
+        }
+
+        // --- Import / Export / Clear Features ---
+        function clearSession() {
+            const confirmClear = confirm("Are you sure you want to clear all recorded solves? This cannot be undone.");
+            if (confirmClear) {
+                allSolves = [];
+                sessionSolves = [];
+                localStorage.removeItem('xkytimer_solves');
+                updateStatsUI();
+                renderSolveHistory();
+            }
+        }
+
+        function exportData() {
+            if (allSolves.length === 0) return alert("No solves to export.");
+
+            const exportObj = {
+                metadata: { exportedAt: new Date().toISOString(), app: "xkytimer" },
+                solves: allSolves
+            };
+
+            const dataStr = JSON.stringify(exportObj, null, 2);
+            const blob = new Blob([dataStr], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `xkytimer_session_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Security: Reset input value so same file can be selected again if needed
+            event.target.value = '';
+
+            // Security: Rate Limit (5 seconds)
+            const now = Date.now();
+            if (now - lastImportTime < IMPORT_COOLDOWN_MS) {
+                return alert("Please wait a few seconds before importing again.");
+            }
+            lastImportTime = now;
+
+            // Security: File extension check
+            if (!file.name.toLowerCase().endsWith('.txt')) {
+                return alert("Security Error: Only .txt files are allowed.");
+            }
+
+            // Security: File size limit (max 1MB to prevent memory crash on malicious files)
+            if (file.size > 1024 * 1024) {
+                return alert("Security Error: File is too large (max 1MB).");
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (!parsed.solves || !Array.isArray(parsed.solves)) {
+                        throw new Error("Invalid format");
+                    }
+
+                    // Merge imported solves with existing ones, avoiding exact ID duplicates
+                    const existingIds = new Set(allSolves.map(s => s.id));
+                    let addedCount = 0;
+
+                    parsed.solves.forEach(solve => {
+                        if (!existingIds.has(solve.id)) {
+                            allSolves.push(solve);
+                            addedCount++;
+                        }
+                    });
+
+                    if (addedCount > 0) {
+                        // Sort all solves by ID (timestamp) to maintain correct order
+                        allSolves.sort((a, b) => a.id - b.id);
+                        saveToLocalStorage();
+                        updateStatsUI();
+                        renderSolveHistory();
+                        alert(`Successfully imported ${addedCount} new solves!`);
+                    } else {
+                        alert("No new solves found in file (duplicates ignored).");
+                    }
+
+                } catch (error) {
+                    alert("Failed to parse file. Ensure it is a valid xkytimer export .txt file.");
+                }
+            };
+            reader.readAsText(file);
         }
 
         // --- Event Listeners ---
-
         window.addEventListener('keydown', (e) => {
+            // Ignore keystrokes if typing in an input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
             if (e.code === 'Space') {
-                e.preventDefault(); // Prevent page scrolling
-                
+                e.preventDefault();
+
                 if (state === 'idle') {
                     state = 'ready';
                     timerDisplay.classList.add('ready');
@@ -168,19 +547,18 @@
                     timerDisplay.textContent = '0.000';
                 }
             }
-            
+
             // Stop timer on any key press if running
             if (state === 'running') {
                 state = 'idle';
                 cancelAnimationFrame(animationFrameId);
-                const finalTime = performance.now() - startTime;
-                const formattedFinal = formatTime(finalTime);
-                
+                const finalTimeMs = performance.now() - startTime;
+                const formattedFinal = formatTime(finalTimeMs);
+
                 timerDisplay.textContent = formattedFinal;
                 timerDisplay.classList.add('stopped');
-                
-                addTimeToList(formattedFinal);
-                updateScramble();
+
+                recordSolve(finalTimeMs, formattedFinal);
             }
         });
 
@@ -193,8 +571,9 @@
             }
         });
 
-        // Initialize first scramble
-        updateScramble();
+        // Start the application
+        init();
     </script>
 </body>
+
 </html>
