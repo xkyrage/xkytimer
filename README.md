@@ -11,6 +11,17 @@ xkytimer is a lightweight, browser-based speedcubing timer. It is designed to be
 * **Session Tracking:** Records and displays your recent solve times in a local list.
 * **Zero Dependencies:** Built entirely with vanilla HTML, CSS, and JavaScript. No frameworks or external libraries required.
 
+## Preview
+In Action
+<img width="2553" height="1293" alt="image" src="https://github.com/user-attachments/assets/56811ba5-e088-4719-b86c-340adade15c7" />
+Export Session
+<img width="1446" height="773" alt="image" src="https://github.com/user-attachments/assets/e993d92c-93e7-4c6e-8ee2-a0ede2d68d20" />
+Export Format
+<img width="1529" height="1022" alt="image" src="https://github.com/user-attachments/assets/0837bd39-7c48-4e30-a69a-de4f6b1a4217" />
+
+
+
+
 ## Usage
 
 ### Installation
