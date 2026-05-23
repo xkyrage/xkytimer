@@ -700,7 +700,7 @@
             reader.readAsText(file);
         }
 
-        // --- Input Event Listeners (Keyboard & Touch) ---
+       // --- Input Event Listeners (Keyboard & Touch) ---
         function isInteractiveElement(element) {
             return element.tagName === 'BUTTON' || 
                    element.tagName === 'INPUT' || 
@@ -726,11 +726,19 @@
             }
         });
 
-        // --- UPDATED TOUCH LOGIC ---
+        // --- UPDATED TOUCH LOGIC (Merged Multi-touch Lock & Scroll Cancel) ---
         let ignoreTouchesUntilClear = false; // The lock variable
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isScrolling = false;
 
         window.addEventListener('touchstart', (e) => {
             if (isInteractiveElement(e.target)) return;
+
+            // Record where the touch started for scroll detection
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            isScrolling = false;
 
             if (state === 'running') {
                 e.preventDefault(); 
@@ -740,41 +748,6 @@
             } else if (state === 'idle' && !ignoreTouchesUntilClear) {
                 // Only get ready if the lock is lifted
                 handleTimerReady();
-            }
-        }, { passive: false });
-
-        window.addEventListener('touchend', (e) => {
-            if (isInteractiveElement(e.target)) return;
-            
-            // Start the timer ONLY if we are ready AND zero fingers are touching the screen
-            if (state === 'ready' && e.touches.length === 0) {
-                e.preventDefault();
-                handleTimerStart();
-            }
-
-            // Once the screen is completely clear of fingers, lift the lock
-            if (e.touches.length === 0) {
-                ignoreTouchesUntilClear = false;
-            }
-        }, { passive: false });
-        // Variables to track touch movement
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let isScrolling = false;
-
-        window.addEventListener('touchstart', (e) => {
-            if (isInteractiveElement(e.target)) return;
-
-            // Record where the touch started
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-            isScrolling = false;
-
-            if (state === 'idle') {
-                handleTimerReady();
-            } else if (state === 'running') {
-                e.preventDefault();
-                handleTimerStop();
             }
         }, { passive: false });
 
@@ -790,17 +763,23 @@
                     isScrolling = true;
                     state = 'idle'; // Cancel the ready state
                     timerDisplay.classList.remove('ready');
+                    timerDisplay.textContent = '0.000'; // Reset display text
                 }
             }
         }, { passive: true });
 
         window.addEventListener('touchend', (e) => {
             if (isInteractiveElement(e.target)) return;
-
-            // Only start the timer if the user didn't scroll
-            if (state === 'ready' && !isScrolling) {
+            
+            // Start the timer ONLY if we are ready, didn't scroll, AND zero fingers are touching the screen
+            if (state === 'ready' && !isScrolling && e.touches.length === 0) {
                 e.preventDefault();
                 handleTimerStart();
+            }
+
+            // Once the screen is completely clear of fingers, lift the lock
+            if (e.touches.length === 0) {
+                ignoreTouchesUntilClear = false;
             }
         }, { passive: false });
 
