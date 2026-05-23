@@ -700,11 +700,11 @@
             reader.readAsText(file);
         }
 
-       // --- Input Event Listeners (Keyboard & Touch) ---
+        // --- Input Event Listeners (Keyboard & Touch) ---
         function isInteractiveElement(element) {
-            return element.tagName === 'BUTTON' ||
-                element.tagName === 'INPUT' ||
-                element.closest('button') !== null;
+            return element.tagName === 'BUTTON' || 
+                   element.tagName === 'INPUT' || 
+                   element.closest('button') !== null;
         }
 
         window.addEventListener('keydown', (e) => {
@@ -714,7 +714,7 @@
                 e.preventDefault();
                 handleTimerReady();
             }
-
+            
             if (state === 'running') {
                 handleTimerStop();
             }
@@ -726,6 +726,37 @@
             }
         });
 
+        // --- UPDATED TOUCH LOGIC ---
+        let ignoreTouchesUntilClear = false; // The lock variable
+
+        window.addEventListener('touchstart', (e) => {
+            if (isInteractiveElement(e.target)) return;
+
+            if (state === 'running') {
+                e.preventDefault(); 
+                handleTimerStop();
+                // Lock the timer: ignore all other fingers until the screen is clear
+                ignoreTouchesUntilClear = true; 
+            } else if (state === 'idle' && !ignoreTouchesUntilClear) {
+                // Only get ready if the lock is lifted
+                handleTimerReady();
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', (e) => {
+            if (isInteractiveElement(e.target)) return;
+            
+            // Start the timer ONLY if we are ready AND zero fingers are touching the screen
+            if (state === 'ready' && e.touches.length === 0) {
+                e.preventDefault();
+                handleTimerStart();
+            }
+
+            // Once the screen is completely clear of fingers, lift the lock
+            if (e.touches.length === 0) {
+                ignoreTouchesUntilClear = false;
+            }
+        }, { passive: false });
         // Variables to track touch movement
         let touchStartX = 0;
         let touchStartY = 0;
