@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xkytimer - Speedcube Trainer</title>
     <style>
-        body {
+       body {
             background-color: #121212;
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -19,7 +19,7 @@
             padding: 0;
             box-sizing: border-box;
             
-            /* Add these lines to prevent selection */
+            /* Prevent selection */
             -webkit-user-select: none; /* Safari */
             -moz-user-select: none;    /* Firefox */
             -ms-user-select: none;     /* IE10+/Edge */
@@ -33,7 +33,7 @@
             padding: 1rem 0;
             box-sizing: border-box;
             border-bottom: 1px solid #1e293b;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem; /* Slightly reduced for mobile */
             overflow: hidden;
             white-space: nowrap;
         }
@@ -49,13 +49,8 @@
         }
 
         @keyframes marquee {
-            0% {
-                transform: translateX(100vw);
-            }
-
-            100% {
-                transform: translateX(-100%);
-            }
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-100%); }
         }
 
         .scramble-section {
@@ -66,6 +61,7 @@
             width: 100%;
             max-width: 800px;
             padding: 0 1rem;
+            box-sizing: border-box;
         }
 
         .scramble-label {
@@ -79,17 +75,19 @@
         .scramble-container {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.5rem; /* Reduced gap for smaller screens */
             width: 100%;
             justify-content: center;
         }
 
         #scramble {
-            font-size: 1.5rem;
-            letter-spacing: 2px;
+            /* Use clamp to fluidly resize the text: minimum 1rem, ideal 4vw, maximum 1.5rem */
+            font-size: clamp(1rem, 4vw, 1.5rem); 
+            letter-spacing: 1px; /* Reduced slightly to fit mobile */
             text-align: center;
             color: #4da6ff;
-            min-width: 400px;
+            flex-grow: 1; /* Allows it to take up available space instead of fixed width */
+            word-wrap: break-word; /* Allows scramble to break to a new line if needed */
         }
 
         button {
@@ -101,11 +99,10 @@
             cursor: pointer;
             font-family: inherit;
             transition: background 0.2s, border-color 0.2s;
+            white-space: nowrap; /* Prevents button text from stacking weirdly */
         }
 
-        button:hover {
-            background: #3a3a3a;
-        }
+        button:hover { background: #3a3a3a; }
 
         button:disabled {
             background: #1a1a1a;
@@ -121,26 +118,24 @@
         }
 
         #timer {
-            font-size: 8rem;
+            /* Fluid resizing: Min 4rem (mobile), ideal 18vw, Max 8rem (desktop) */
+            font-size: clamp(4rem, 18vw, 8rem);
             font-weight: bold;
             font-variant-numeric: tabular-nums;
             margin-bottom: 1rem;
             transition: color 0.1s;
+            line-height: 1;
         }
 
-        .ready {
-            color: #00e676 !important;
-        }
-
-        .stopped {
-            color: #88ff00 !important;
-        }
+        .ready { color: #00e676 !important; }
+        .stopped { color: #88ff00 !important; }
 
         .hint {
             color: #888;
             margin-bottom: 2rem;
             text-align: center;
             padding: 0 1rem;
+            font-size: 0.9rem;
         }
 
         .stats-container {
@@ -152,13 +147,13 @@
             border-radius: 8px;
             border: 1px solid #333;
             flex-wrap: wrap;
-            /* Allows wrapping on very small screens */
             justify-content: center;
+            width: 90%;
+            max-width: 600px;
+            box-sizing: border-box;
         }
 
-        .stat-box {
-            text-align: center;
-        }
+        .stat-box { text-align: center; }
 
         .stat-label {
             font-size: 0.8rem;
@@ -193,6 +188,7 @@
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
+            margin-bottom: 0rem;
         }
 
         #best-history-highlight {
@@ -261,6 +257,32 @@
             font-size: 0.85rem;
             text-align: center;
             letter-spacing: 1px;
+            padding: 10px;
+        }
+
+        /* --- MOBILE RESPONSIVE MEDIA QUERIES --- */
+        @media screen and (max-width: 600px) {
+            .stats-container {
+                gap: 1rem; /* Less space between stats */
+                padding: 1rem;
+            }
+            
+            .stat-value {
+                font-size: 1.2rem; /* Slightly smaller stat numbers */
+            }
+
+            #data-controls {
+                justify-content: center; /* Center the buttons on mobile */
+            }
+
+            #data-controls button {
+                flex: 1 1 45%; /* Buttons take up half the width on small screens */
+                padding: 0.75rem; /* Larger tap target for fingers */
+            }
+            
+            .scramble-container button {
+                padding: 0.5rem; /* Make next/prev buttons slightly smaller so scramble fits */
+            }
         }
     </style>
 </head>
@@ -641,7 +663,7 @@
             reader.readAsText(file);
         }
 
-        // --- Input Event Listeners (Keyboard & Touch) ---
+       // --- Input Event Listeners (Keyboard & Touch) ---
         function isInteractiveElement(element) {
             return element.tagName === 'BUTTON' ||
                 element.tagName === 'INPUT' ||
@@ -667,8 +689,18 @@
             }
         });
 
+        // Variables to track touch movement
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isScrolling = false;
+
         window.addEventListener('touchstart', (e) => {
             if (isInteractiveElement(e.target)) return;
+
+            // Record where the touch started
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            isScrolling = false;
 
             if (state === 'idle') {
                 handleTimerReady();
@@ -678,10 +710,27 @@
             }
         }, { passive: false });
 
+        // Detect if the user is swiping/scrolling
+        window.addEventListener('touchmove', (e) => {
+            if (state === 'ready') {
+                const currentX = e.touches[0].clientX;
+                const currentY = e.touches[0].clientY;
+                const distance = Math.sqrt(Math.pow(currentX - touchStartX, 2) + Math.pow(currentY - touchStartY, 2));
+
+                // If finger moves more than 10 pixels, treat it as a scroll
+                if (distance > 10) {
+                    isScrolling = true;
+                    state = 'idle'; // Cancel the ready state
+                    timerDisplay.classList.remove('ready');
+                }
+            }
+        }, { passive: true });
+
         window.addEventListener('touchend', (e) => {
             if (isInteractiveElement(e.target)) return;
 
-            if (state === 'ready') {
+            // Only start the timer if the user didn't scroll
+            if (state === 'ready' && !isScrolling) {
                 e.preventDefault();
                 handleTimerStart();
             }
