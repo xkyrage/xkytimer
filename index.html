@@ -47,6 +47,10 @@
             animation: marquee 12s linear infinite;
         }
 
+        .ready { color: #00e676 !important; } /* Green */
+        .waiting { color: #ff9800 !important; } /* Orange */
+        .stopped { color: #ff5252 !important; } /* Red */
+
         @keyframes marquee {
             0% { transform: translateX(100vw); }
             100% { transform: translateX(-100%); }
@@ -343,7 +347,7 @@
     </div>
 
     <div id="timer">0.000</div>
-    <div class="hint">Hold Spacebar or touch the screen to ready, release to start. Press any key or tap to stop.</div>
+    <div class="hint">Hold Spacebar or touch the screen until the timer turns green to ready, release to start. Press any key or tap to stop.</div>
 
     
 
@@ -387,40 +391,42 @@
     </footer>
 
 
-    <script>
-        // --- Core Variables ---
+    <script>// --- Core Variables ---
         const timerDisplay = document.getElementById('timer');
         const scrambleDisplay = document.getElementById('scramble');
         const timesList = document.getElementById('times-list');
         const sessionBestDisplay = document.getElementById('session-best');
-        const sessionAverageDisplay = document.getElementById('session-average'); // New Variable
+        const sessionAverageDisplay = document.getElementById('session-average');
         const allTimeBestDisplay = document.getElementById('all-time-best');
         const btnPrevScramble = document.getElementById('btn-prev-scramble');
         const bestHistoryHighlight = document.getElementById('best-history-highlight');
 
-        let state = 'idle'; // idle -> ready -> running
+        let state = 'idle'; // idle -> waiting -> ready -> running
         let startTime;
         let animationFrameId;
-
+        
         let allSolves = [];
         let sessionSolves = [];
-
+        
         // Scramble Management
         let scramblesHistory = [];
         let currentScrambleIndex = -1;
 
         // Security / Rate Limit
         let lastImportTime = 0;
-        const IMPORT_COOLDOWN_MS = 5000; // 5 seconds
+        const IMPORT_COOLDOWN_MS = 5000;
+
+        // Inspection / Hold Variables
+        let holdTimeout;
+        const HOLD_REQUIRED_MS = 1500; // 1.5 seconds
 
         // --- Initialization ---
         function init() {
             loadFromLocalStorage();
             updateStatsUI();
             renderSolveHistory();
-            navigateScramble(1); // Generate first scramble
-
-            // Prevent buttons from keeping focus so Spacebar works for timer
+            navigateScramble(1); 
+            
             document.querySelectorAll('button').forEach(btn => {
                 btn.addEventListener('click', function () { this.blur(); });
             });
@@ -434,7 +440,6 @@
                     allSolves = JSON.parse(stored);
                 }
             } catch (e) {
-                console.error("Failed to load solves from local storage", e);
                 allSolves = [];
             }
         }
@@ -462,16 +467,14 @@
 
         function navigateScramble(direction) {
             if (direction === 1) {
-                // Next
                 currentScrambleIndex++;
                 if (currentScrambleIndex >= scramblesHistory.length) {
                     scramblesHistory.push(generateScramble());
                 }
             } else if (direction === -1) {
-                // Prev
                 if (currentScrambleIndex > 0) currentScrambleIndex--;
             }
-
+            
             scrambleDisplay.textContent = scramblesHistory[currentScrambleIndex];
             btnPrevScramble.disabled = currentScrambleIndex === 0;
         }
@@ -506,43 +509,40 @@
                 }
             }
 
-            const solveNum = bestSolveIndex + 1;
-
+            const solveNum = bestSolveIndex + 1; 
+            
             document.getElementById('best-history-label').textContent = `Solve ${solveNum}`;
             document.getElementById('best-history-time').textContent = bestSolve.timeStr;
             document.getElementById('best-history-scramble').textContent = bestSolve.scramble;
-
+            
             bestHistoryHighlight.style.display = 'block';
         }
 
         function updateStatsUI() {
-            // Find minimums
             const sessionMin = sessionSolves.length > 0 ? Math.min(...sessionSolves.map(s => s.timeMs)) : Infinity;
             const allTimeMin = allSolves.length > 0 ? Math.min(...allSolves.map(s => s.timeMs)) : Infinity;
 
-            // Calculate Session Average
             let sessionAvg = Infinity;
             if (sessionSolves.length > 0) {
                 const totalMs = sessionSolves.reduce((sum, solve) => sum + solve.timeMs, 0);
                 sessionAvg = totalMs / sessionSolves.length;
             }
 
-            // Update UI
             sessionBestDisplay.textContent = sessionMin !== Infinity ? formatTime(sessionMin) : '--';
             sessionAverageDisplay.textContent = sessionAvg !== Infinity ? formatTime(sessionAvg) : '--';
             allTimeBestDisplay.textContent = allTimeMin !== Infinity ? formatTime(allTimeMin) : '--';
-
+            
             updateBestHistoryHighlight();
         }
 
         function renderSolveHistory() {
             timesList.innerHTML = '';
             const displaySolves = [...allSolves].reverse();
-
+            
             displaySolves.forEach((solve, index) => {
                 const li = document.createElement('li');
-                const solveNum = displaySolves.length - index;
-
+                const solveNum = displaySolves.length - index; 
+                
                 li.innerHTML = `
                     <div class="solve-header">
                         <span>Solve ${solveNum}</span>
@@ -554,18 +554,33 @@
             });
         }
 
-        // --- Timer Control Functions ---
-        function handleTimerReady() {
+        // --- NEW Timer Control Functions ---
+        function handleTimerPressDown() {
             if (state === 'idle') {
-                state = 'ready';
-                timerDisplay.classList.add('ready');
-                timerDisplay.classList.remove('stopped');
+                state = 'waiting';
+                timerDisplay.classList.add('waiting');
+                timerDisplay.classList.remove('stopped', 'ready');
                 timerDisplay.textContent = '0.000';
+
+                // Start the 1.5 second hold requirement
+                holdTimeout = setTimeout(() => {
+                    if (state === 'waiting') {
+                        state = 'ready';
+                        timerDisplay.classList.remove('waiting');
+                        timerDisplay.classList.add('ready');
+                    }
+                }, HOLD_REQUIRED_MS);
             }
         }
 
-        function handleTimerStart() {
-            if (state === 'ready') {
+        function handleTimerReleaseUp() {
+            if (state === 'waiting') {
+                // Released too early! Cancel the start.
+                clearTimeout(holdTimeout);
+                state = 'idle';
+                timerDisplay.classList.remove('waiting');
+            } else if (state === 'ready') {
+                // Held long enough, start the timer!
                 state = 'running';
                 timerDisplay.classList.remove('ready');
                 startTime = performance.now();
@@ -604,11 +619,11 @@
 
             sessionSolves.push(solveData);
             allSolves.push(solveData);
-
+            
             saveToLocalStorage();
             updateStatsUI();
             renderSolveHistory();
-
+            
             navigateScramble(1);
         }
 
@@ -626,7 +641,7 @@
 
         function exportData() {
             if (allSolves.length === 0) return alert("No solves to export.");
-
+            
             const exportObj = {
                 metadata: { exportedAt: new Date().toISOString(), app: "xkytimer" },
                 solves: allSolves
@@ -635,7 +650,7 @@
             const dataStr = JSON.stringify(exportObj, null, 2);
             const blob = new Blob([dataStr], { type: "text/plain" });
             const url = URL.createObjectURL(blob);
-
+            
             const a = document.createElement("a");
             a.href = url;
             a.download = `xkytimer_session_${new Date().toISOString().split('T')[0]}.txt`;
@@ -700,7 +715,7 @@
             reader.readAsText(file);
         }
 
-       // --- Input Event Listeners (Keyboard & Touch) ---
+        // --- Input Event Listeners (Keyboard & Touch) ---
         function isInteractiveElement(element) {
             return element.tagName === 'BUTTON' || 
                    element.tagName === 'INPUT' || 
@@ -712,7 +727,8 @@
 
             if (e.code === 'Space') {
                 e.preventDefault();
-                handleTimerReady();
+                if (e.repeat) return; // VERY IMPORTANT: Prevents the browser from rapidly firing keydown when held
+                handleTimerPressDown();
             }
             
             if (state === 'running') {
@@ -722,12 +738,12 @@
 
         window.addEventListener('keyup', (e) => {
             if (e.code === 'Space') {
-                handleTimerStart();
+                handleTimerReleaseUp();
             }
         });
 
-        // --- UPDATED TOUCH LOGIC (Merged Multi-touch Lock & Scroll Cancel) ---
-        let ignoreTouchesUntilClear = false; // The lock variable
+        // --- UPDATED TOUCH LOGIC (Multi-touch Lock & Scroll Cancel) ---
+        let ignoreTouchesUntilClear = false; 
         let touchStartX = 0;
         let touchStartY = 0;
         let isScrolling = false;
@@ -735,7 +751,6 @@
         window.addEventListener('touchstart', (e) => {
             if (isInteractiveElement(e.target)) return;
 
-            // Record where the touch started for scroll detection
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
             isScrolling = false;
@@ -743,27 +758,24 @@
             if (state === 'running') {
                 e.preventDefault(); 
                 handleTimerStop();
-                // Lock the timer: ignore all other fingers until the screen is clear
                 ignoreTouchesUntilClear = true; 
             } else if (state === 'idle' && !ignoreTouchesUntilClear) {
-                // Only get ready if the lock is lifted
-                handleTimerReady();
+                handleTimerPressDown();
             }
         }, { passive: false });
 
-        // Detect if the user is swiping/scrolling
         window.addEventListener('touchmove', (e) => {
-            if (state === 'ready') {
+            if (state === 'waiting' || state === 'ready') {
                 const currentX = e.touches[0].clientX;
                 const currentY = e.touches[0].clientY;
                 const distance = Math.sqrt(Math.pow(currentX - touchStartX, 2) + Math.pow(currentY - touchStartY, 2));
 
-                // If finger moves more than 10 pixels, treat it as a scroll
                 if (distance > 10) {
                     isScrolling = true;
-                    state = 'idle'; // Cancel the ready state
-                    timerDisplay.classList.remove('ready');
-                    timerDisplay.textContent = '0.000'; // Reset display text
+                    state = 'idle'; 
+                    clearTimeout(holdTimeout); // Cancel the 1.5s hold if they scroll away
+                    timerDisplay.classList.remove('waiting', 'ready');
+                    timerDisplay.textContent = '0.000';
                 }
             }
         }, { passive: true });
@@ -771,31 +783,19 @@
         window.addEventListener('touchend', (e) => {
             if (isInteractiveElement(e.target)) return;
             
-            // Start the timer ONLY if we are ready, didn't scroll, AND zero fingers are touching the screen
-            if (state === 'ready' && !isScrolling && e.touches.length === 0) {
+            if (!isScrolling && e.touches.length === 0) {
                 e.preventDefault();
-                handleTimerStart();
+                handleTimerReleaseUp();
             }
 
-            // Once the screen is completely clear of fingers, lift the lock
             if (e.touches.length === 0) {
                 ignoreTouchesUntilClear = false;
             }
         }, { passive: false });
 
         // --- Prevent Default Browser Behaviors ---
-        
-        // Disable right-click context menu
-        window.addEventListener('contextmenu', function (e) {
-            e.preventDefault();
-        });
-
-        // Disable dragging elements (like images or text blocks)
-        window.addEventListener('dragstart', function (e) {
-            e.preventDefault();
-        });
-
-        // Disable keyboard shortcuts for selecting all (Ctrl+A) and copying (Ctrl+C)
+        window.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+        window.addEventListener('dragstart', function (e) { e.preventDefault(); });
         window.addEventListener('keydown', function(e) {
             if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'c' || e.key === 'x')) {
                 e.preventDefault();
@@ -803,7 +803,8 @@
         });
 
         init();
-    </script>
+        </script>
+   
 </body>
 
 </html>
