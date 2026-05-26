@@ -764,8 +764,13 @@
             }
         }, { passive: false });
 
-        window.addEventListener('touchmove', (e) => {
-            if (state === 'waiting' || state === 'ready') {
+       window.addEventListener('touchmove', (e) => {
+            // If the timer is fully ready (green) or currently running, lock the screen and prevent scrolling
+            if (state === 'ready' || state === 'running') {
+                e.preventDefault(); 
+            } 
+            // If still in the 1.5s waiting phase (orange) and the finger moves too much, cancel the hold and let the page scroll
+            else if (state === 'waiting') {
                 const currentX = e.touches[0].clientX;
                 const currentY = e.touches[0].clientY;
                 const distance = Math.sqrt(Math.pow(currentX - touchStartX, 2) + Math.pow(currentY - touchStartY, 2));
@@ -773,12 +778,12 @@
                 if (distance > 10) {
                     isScrolling = true;
                     state = 'idle'; 
-                    clearTimeout(holdTimeout); // Cancel the 1.5s hold if they scroll away
+                    clearTimeout(holdTimeout); // Cancel the 1.5s hold
                     timerDisplay.classList.remove('waiting', 'ready');
                     timerDisplay.textContent = '0.000';
                 }
             }
-        }, { passive: true });
+        }, { passive: false });
 
         window.addEventListener('touchend', (e) => {
             if (isInteractiveElement(e.target)) return;
