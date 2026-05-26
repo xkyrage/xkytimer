@@ -717,9 +717,15 @@
 
         // --- Input Event Listeners (Keyboard & Touch) ---
         function isInteractiveElement(element) {
+            // To fix mobile scrolling, we define safe zones.
+            // If the user touches the stats, buttons, or history list, allow native scrolling.
+            // If they touch the Scramble, Timer, or blank space at the top, it acts strictly as the Timer Pad.
             return element.tagName === 'BUTTON' || 
                    element.tagName === 'INPUT' || 
-                   element.closest('button') !== null;
+                   element.closest('button') !== null ||
+                   element.closest('#times-container') !== null ||
+                   element.closest('.stats-container') !== null ||
+                   element.closest('#data-controls') !== null;
         }
 
         window.addEventListener('keydown', (e) => {
@@ -727,7 +733,7 @@
 
             if (e.code === 'Space') {
                 e.preventDefault();
-                if (e.repeat) return; // VERY IMPORTANT: Prevents the browser from rapidly firing keydown when held
+                if (e.repeat) return; // Prevents rapid firing if Spacebar is held down
                 handleTimerPressDown();
             }
             
@@ -742,21 +748,18 @@
             }
         });
 
-        // --- UPDATED TOUCH LOGIC (Multi-touch Lock & Scroll Cancel) ---
-        let ignoreTouchesUntilClear = false; 
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let isScrolling = false;
+        // --- BULLETPROOF MOBILE TOUCH LOGIC ---
+        let ignoreTouchesUntilClear = false;
 
         window.addEventListener('touchstart', (e) => {
             if (isInteractiveElement(e.target)) return;
 
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-            isScrolling = false;
+            // THE FIX: Immediately prevent default on touch down.
+            // This forces the browser to treat the top half of the screen purely as a button,
+            // making it completely impossible to scroll while holding the timer.
+            e.preventDefault(); 
 
             if (state === 'running') {
-                e.preventDefault(); 
                 handleTimerStop();
                 ignoreTouchesUntilClear = true; 
             } else if (state === 'idle' && !ignoreTouchesUntilClear) {
@@ -764,39 +767,39 @@
             }
         }, { passive: false });
 
-       window.addEventListener('touchmove', (e) => {
-            // If the timer is fully ready (green) or currently running, lock the screen and prevent scrolling
-            if (state === 'ready' || state === 'running') {
-                e.preventDefault(); 
-            } 
-            // If still in the 1.5s waiting phase (orange) and the finger moves too much, cancel the hold and let the page scroll
-            else if (state === 'waiting') {
-                const currentX = e.touches[0].clientX;
-                const currentY = e.touches[0].clientY;
-                const distance = Math.sqrt(Math.pow(currentX - touchStartX, 2) + Math.pow(currentY - touchStartY, 2));
-
-                if (distance > 10) {
-                    isScrolling = true;
-                    state = 'idle'; 
-                    clearTimeout(holdTimeout); // Cancel the 1.5s hold
-                    timerDisplay.classList.remove('waiting', 'ready');
-                    timerDisplay.textContent = '0.000';
-                }
-            }
+        window.addEventListener('touchmove', (e) => {
+            if (isInteractiveElement(e.target)) return;
+            // Catch any sliding fingers on the timer pad and strictly forbid scrolling
+            e.preventDefault(); 
         }, { passive: false });
 
         window.addEventListener('touchend', (e) => {
             if (isInteractiveElement(e.target)) return;
+            e.preventDefault();
             
-            if (!isScrolling && e.touches.length === 0) {
-                e.preventDefault();
-                handleTimerReleaseUp();
-            }
-
             if (e.touches.length === 0) {
+                if (state === 'waiting' || state === 'ready') {
+                    handleTimerReleaseUp();
+                }
                 ignoreTouchesUntilClear = false;
             }
         }, { passive: false });
+
+        // Handle edge case where a system notification interrupts the touch
+        window.addEventListener('touchcancel', (e) => {
+            if (isInteractiveElement(e.target)) return;
+            
+            if (state === 'waiting') {
+                clearTimeout(holdTimeout);
+                state = 'idle';
+                timerDisplay.classList.remove('waiting', 'ready');
+                timerDisplay.textContent = '0.000';
+            }
+            
+            if (e.touches.length === 0) {
+                ignoreTouchesUntilClear = false;
+            }
+        });
 
         // --- Prevent Default Browser Behaviors ---
         window.addEventListener('contextmenu', function (e) { e.preventDefault(); });
