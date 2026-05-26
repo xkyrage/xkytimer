@@ -310,7 +310,7 @@
     </footer>
 
     <script>
-        // --- Core Variables ---
+      // --- Core Variables ---
         const timerDisplay = document.getElementById('timer');
         const scrambleDisplay = document.getElementById('scramble');
         const timesList = document.getElementById('times-list');
@@ -473,12 +473,9 @@
             });
         }
 
-        // --- NEW Timer Control Functions ---
+        // --- Timer Control Functions ---
         function handleTimerPressDown() {
             if (state === 'idle') {
-                // LOCK THE SCREEN: Prevent all scrolling while starting/running
-                document.body.classList.add('no-scroll'); 
-
                 state = 'waiting';
                 timerDisplay.classList.add('waiting');
                 timerDisplay.classList.remove('stopped', 'ready');
@@ -497,18 +494,16 @@
 
         function handleTimerReleaseUp() {
             if (state === 'waiting') {
-                // Released too early! Cancel the start and unlock screen.
+                // Released too early! Cancel the start.
                 clearTimeout(holdTimeout);
                 state = 'idle';
                 timerDisplay.classList.remove('waiting');
-                document.body.classList.remove('no-scroll'); 
             } else if (state === 'ready') {
                 // Held long enough, start the timer!
                 state = 'running';
                 timerDisplay.classList.remove('ready');
                 startTime = performance.now();
                 animationFrameId = requestAnimationFrame(updateTimer);
-                // Keep the screen locked while solving
             }
         }
 
@@ -523,9 +518,6 @@
                 timerDisplay.classList.add('stopped');
 
                 recordSolve(finalTimeMs, formattedFinal);
-                
-                // UNLOCK THE SCREEN: Timer is stopped, allow user to scroll history again
-                document.body.classList.remove('no-scroll'); 
             }
         }
 
@@ -646,7 +638,8 @@
         function isInteractiveElement(element) {
             return element.tagName === 'BUTTON' || 
                    element.tagName === 'INPUT' || 
-                   element.closest('button') !== null;
+                   element.closest('button') !== null ||
+                   element.closest('#times-container') !== null; // Allow scrolling the history list
         }
 
         window.addEventListener('keydown', (e) => {
@@ -675,8 +668,10 @@
         window.addEventListener('touchstart', (e) => {
             if (isInteractiveElement(e.target)) return;
 
+            // This aggressively stops the browser from thinking you want to scroll
+            e.preventDefault(); 
+
             if (state === 'running') {
-                e.preventDefault(); // Stop double-tap zoom
                 handleTimerStop();
                 ignoreTouchesUntilClear = true; 
             } else if (state === 'idle' && !ignoreTouchesUntilClear) {
@@ -685,14 +680,15 @@
         }, { passive: false });
 
         window.addEventListener('touchmove', (e) => {
-            // Backup protection: if the body has the no-scroll class, force kill any stray scrolling
-            if (document.body.classList.contains('no-scroll')) {
-                e.preventDefault();
-            }
+            if (isInteractiveElement(e.target)) return;
+            // No matter how much your fingers slide on the background, 
+            // DO NOT scroll, and DO NOT cancel the timer. Just hold it.
+            e.preventDefault();
         }, { passive: false });
 
         window.addEventListener('touchend', (e) => {
             if (isInteractiveElement(e.target)) return;
+            e.preventDefault();
             
             if (e.touches.length === 0) {
                 if (state === 'waiting' || state === 'ready') {
@@ -709,7 +705,6 @@
             if (state === 'waiting' || state === 'ready') {
                 clearTimeout(holdTimeout);
                 state = 'idle';
-                document.body.classList.remove('no-scroll');
                 timerDisplay.classList.remove('waiting', 'ready');
                 timerDisplay.textContent = '0.000';
             }
