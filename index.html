@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" type="image/png" sizes="32x32" href="asset/favicon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xkytimer - Speedcube Trainer</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="asset/favicon.png">
+     <title>Xkytimer - Speedcube Trainer</title>
     <style>
-       body {
+        body {
             background-color: #121212;
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -18,14 +17,15 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            
-          
-            -webkit-user-select: none; 
-            -moz-user-select: none;    
-            -ms-user-select: none;    
-            user-select: none;        
-            -webkit-touch-callout: none; 
         }
+
+        /* --- THE MOBILE SCROLL LOCK --- */
+        /* When this class is applied, the browser completely disables native swiping/scrolling */
+        body.no-scroll {
+            overflow: hidden !important;
+            touch-action: none !important; 
+        }
+        /* ------------------------------ */
 
         header {
             width: 100%;
@@ -33,6 +33,7 @@
             padding: 1rem 0;
             box-sizing: border-box;
             border-bottom: 1px solid #1e293b;
+            margin-bottom: 3rem;
             overflow: hidden;
             white-space: nowrap;
         }
@@ -44,12 +45,8 @@
             color: #ffffff;
             margin: 0;
             letter-spacing: 0.5px;
-            animation: marquee 12s linear infinite;
+            animation: marquee 12s linear infinite; 
         }
-
-        .ready { color: #00e676 !important; } /* Green */
-        .waiting { color: #ff9800 !important; } /* Orange */
-        .stopped { color: #ff5252 !important; } /* Red */
 
         @keyframes marquee {
             0% { transform: translateX(100vw); }
@@ -60,10 +57,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            margin-bottom: 2rem;
             width: 100%;
             max-width: 800px;
             padding: 0 1rem;
-            box-sizing: border-box;
         }
 
         .scramble-label {
@@ -77,19 +74,18 @@
         .scramble-container {
             display: flex;
             align-items: center;
-            gap: 0.5rem; 
+            gap: 1rem;
             width: 100%;
             justify-content: center;
         }
 
         #scramble {
-            font-size: clamp(1rem, 4vw, 1.5rem); 
-            letter-spacing: 1px; 
+            font-size: 1.5rem;
+            letter-spacing: 2px;
             text-align: center;
             color: #4da6ff;
-            flex-grow: 1; 
-            word-wrap: break-word; 
-           } 
+            min-width: 400px;
+        }
 
         button {
             background: #2a2a2a;
@@ -100,17 +96,10 @@
             cursor: pointer;
             font-family: inherit;
             transition: background 0.2s, border-color 0.2s;
-            white-space: nowrap; 
         }
 
         button:hover { background: #3a3a3a; }
-
-        button:disabled {
-            background: #1a1a1a;
-            color: #555;
-            cursor: not-allowed;
-            border-color: #222;
-        }
+        button:disabled { background: #1a1a1a; color: #555; cursor: not-allowed; border-color: #222; }
 
         .btn-danger:hover {
             background: #4a1a1a;
@@ -119,24 +108,23 @@
         }
 
         #timer {
-            font-size: clamp(4rem, 18vw, 8rem);
+            font-size: 8rem;
             font-weight: bold;
             font-variant-numeric: tabular-nums;
-            margin-top: 2rem;
             margin-bottom: 1rem;
             transition: color 0.1s;
-            line-height: 1;
         }
 
+        /* Timer States */
         .ready { color: #00e676 !important; }
-        .stopped { color: #88ff00 !important; }
+        .waiting { color: #ff9800 !important; }
+        .stopped { color: #ff5252 !important; }
 
         .hint {
             color: #888;
-            margin-bottom: 5rem;
+            margin-bottom: 2rem;
             text-align: center;
             padding: 0 1rem;
-            font-size: 0.9rem;
         }
 
         .stats-container {
@@ -149,12 +137,11 @@
             border: 1px solid #333;
             flex-wrap: wrap;
             justify-content: center;
-            width: 90%;
-            max-width: 600px;
-            box-sizing: border-box;
         }
 
-        .stat-box { text-align: center; }
+        .stat-box {
+            text-align: center;
+        }
 
         .stat-label {
             font-size: 0.8rem;
@@ -171,17 +158,13 @@
         #data-controls {
             display: flex;
             gap: 1rem;
-            margin-top: 2rem;
             margin-bottom: 1rem;
             width: 100%;
             max-width: 600px;
-            justify-content: center; 
-            
+            justify-content: flex-end;
             padding: 0 1rem;
             box-sizing: border-box;
             flex-wrap: wrap;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         #times-container {
@@ -193,7 +176,6 @@
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            margin-bottom: 0rem;
         }
 
         #best-history-highlight {
@@ -262,80 +244,14 @@
             font-size: 0.85rem;
             text-align: center;
             letter-spacing: 1px;
-            padding: 10px;
-        }
-
-  
-        @media screen and (max-width: 600px) {
-            .stats-container {
-                gap: 1rem; 
-                padding: 1rem;
-            }
-            
-            .stat-value {
-                font-size: 1.2rem; 
-            }
-
-
-            #data-controls {
-                flex-direction: row;     
-                flex-wrap: nowrap;       
-                justify-content: center;  
-                gap: 0.4rem;             
-                padding: -1 0.5rem;     
-                margin-bottom: 1.5rem;
-                margin-top: 1.5rem;   
-            }
-
-            #data-controls button {
-                flex: 1;                  
-                width: auto;
-                max-width: none;
-                padding: 0.6rem 0.1rem;  
-                font-size: 0.75rem;      
-                white-space: nowrap;      
-            }
-          
-            
-            .scramble-container button {
-                padding: 0.5rem; 
-            }
-
-             #timer {
-            font-size: clamp(4rem, 18vw, 8rem);
-            font-weight: bold;
-            font-variant-numeric: tabular-nums;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-            transition: color 0.1s;
-            line-height: 1;
-        }
-
-            .hint {
-            color: #888;
-            margin-bottom: 3rem;
-            margin-top: 1rem;
-            text-align: center;
-            padding: 0 1rem;
-            font-size: 0.9rem;
-        }
-
         }
     </style>
 </head>
-
 <body>
 
     <header>
-        <h1 class="header-title">XkyTIMER - Professional Speedcube Timer and Trainer</h1>
+        <h1 class="header-title">Xkytimer - Speedcube Trainer</h1>
     </header>
-
-      <div id="data-controls">
-        <button class="btn-danger" onclick="clearSession()">Clear Session</button>
-        <button onclick="exportData()">Export Data (.txt)</button>
-        <button onclick="document.getElementById('import-file').click()">Import Data</button>
-        <input type="file" id="import-file" accept=".txt" style="display: none;" onchange="importData(event)">
-    </div>
 
     <div class="scramble-section">
         <div class="scramble-label">Scramble</div>
@@ -347,9 +263,7 @@
     </div>
 
     <div id="timer">0.000</div>
-    <div class="hint">Hold Spacebar or touch the screen until the timer turns green to ready, release to start. Press any key or tap to stop.</div>
-
-    
+    <div class="hint">Hold Spacebar or touch the screen to ready, release to start. Press any key or tap to stop.</div>
 
     <div class="stats-container">
         <div class="stat-box">
@@ -366,11 +280,16 @@
         </div>
     </div>
 
-  
+    <div id="data-controls">
+        <button class="btn-danger" onclick="clearSession()">Clear Session</button>
+        <button onclick="exportData()">Export Data (.txt)</button>
+        <button onclick="document.getElementById('import-file').click()">Import Data</button>
+        <input type="file" id="import-file" accept=".txt" style="display: none;" onchange="importData(event)">
+    </div>
 
     <div id="times-container">
         <h3 style="margin-top: 0; margin-bottom: 1rem;">Solve History</h3>
-
+        
         <div id="best-history-highlight">
             <div class="best-highlight-title">Personal Best Record</div>
             <div class="best-highlight-data">
@@ -390,8 +309,8 @@
             </a></strong> - xkyrage · xkytimer - Professional Speedcube Trainer © 2026
     </footer>
 
-
-    <script>// --- Core Variables ---
+    <script>
+        // --- Core Variables ---
         const timerDisplay = document.getElementById('timer');
         const scrambleDisplay = document.getElementById('scramble');
         const timesList = document.getElementById('times-list');
@@ -557,6 +476,9 @@
         // --- NEW Timer Control Functions ---
         function handleTimerPressDown() {
             if (state === 'idle') {
+                // LOCK THE SCREEN: Prevent all scrolling while starting/running
+                document.body.classList.add('no-scroll'); 
+
                 state = 'waiting';
                 timerDisplay.classList.add('waiting');
                 timerDisplay.classList.remove('stopped', 'ready');
@@ -575,16 +497,18 @@
 
         function handleTimerReleaseUp() {
             if (state === 'waiting') {
-                // Released too early! Cancel the start.
+                // Released too early! Cancel the start and unlock screen.
                 clearTimeout(holdTimeout);
                 state = 'idle';
                 timerDisplay.classList.remove('waiting');
+                document.body.classList.remove('no-scroll'); 
             } else if (state === 'ready') {
                 // Held long enough, start the timer!
                 state = 'running';
                 timerDisplay.classList.remove('ready');
                 startTime = performance.now();
                 animationFrameId = requestAnimationFrame(updateTimer);
+                // Keep the screen locked while solving
             }
         }
 
@@ -599,6 +523,9 @@
                 timerDisplay.classList.add('stopped');
 
                 recordSolve(finalTimeMs, formattedFinal);
+                
+                // UNLOCK THE SCREEN: Timer is stopped, allow user to scroll history again
+                document.body.classList.remove('no-scroll'); 
             }
         }
 
@@ -717,15 +644,9 @@
 
         // --- Input Event Listeners (Keyboard & Touch) ---
         function isInteractiveElement(element) {
-            // To fix mobile scrolling, we define safe zones.
-            // If the user touches the stats, buttons, or history list, allow native scrolling.
-            // If they touch the Scramble, Timer, or blank space at the top, it acts strictly as the Timer Pad.
             return element.tagName === 'BUTTON' || 
                    element.tagName === 'INPUT' || 
-                   element.closest('button') !== null ||
-                   element.closest('#times-container') !== null ||
-                   element.closest('.stats-container') !== null ||
-                   element.closest('#data-controls') !== null;
+                   element.closest('button') !== null;
         }
 
         window.addEventListener('keydown', (e) => {
@@ -733,7 +654,7 @@
 
             if (e.code === 'Space') {
                 e.preventDefault();
-                if (e.repeat) return; // Prevents rapid firing if Spacebar is held down
+                if (e.repeat) return;
                 handleTimerPressDown();
             }
             
@@ -748,18 +669,14 @@
             }
         });
 
-        // --- BULLETPROOF MOBILE TOUCH LOGIC ---
-        let ignoreTouchesUntilClear = false;
+        // --- BULLETPROOF TOUCH LOGIC ---
+        let ignoreTouchesUntilClear = false; 
 
         window.addEventListener('touchstart', (e) => {
             if (isInteractiveElement(e.target)) return;
 
-            // THE FIX: Immediately prevent default on touch down.
-            // This forces the browser to treat the top half of the screen purely as a button,
-            // making it completely impossible to scroll while holding the timer.
-            e.preventDefault(); 
-
             if (state === 'running') {
+                e.preventDefault(); // Stop double-tap zoom
                 handleTimerStop();
                 ignoreTouchesUntilClear = true; 
             } else if (state === 'idle' && !ignoreTouchesUntilClear) {
@@ -768,14 +685,14 @@
         }, { passive: false });
 
         window.addEventListener('touchmove', (e) => {
-            if (isInteractiveElement(e.target)) return;
-            // Catch any sliding fingers on the timer pad and strictly forbid scrolling
-            e.preventDefault(); 
+            // Backup protection: if the body has the no-scroll class, force kill any stray scrolling
+            if (document.body.classList.contains('no-scroll')) {
+                e.preventDefault();
+            }
         }, { passive: false });
 
         window.addEventListener('touchend', (e) => {
             if (isInteractiveElement(e.target)) return;
-            e.preventDefault();
             
             if (e.touches.length === 0) {
                 if (state === 'waiting' || state === 'ready') {
@@ -785,13 +702,14 @@
             }
         }, { passive: false });
 
-        // Handle edge case where a system notification interrupts the touch
+        // Handle edge cases where a system popup interrupts the touch
         window.addEventListener('touchcancel', (e) => {
             if (isInteractiveElement(e.target)) return;
             
-            if (state === 'waiting') {
+            if (state === 'waiting' || state === 'ready') {
                 clearTimeout(holdTimeout);
                 state = 'idle';
+                document.body.classList.remove('no-scroll');
                 timerDisplay.classList.remove('waiting', 'ready');
                 timerDisplay.textContent = '0.000';
             }
@@ -811,8 +729,6 @@
         });
 
         init();
-        </script>
-   
+    </script>
 </body>
-
 </html>
