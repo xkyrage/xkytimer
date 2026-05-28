@@ -19,6 +19,21 @@ Export Session
 Export Format
 <img width="1529" height="1022" alt="image" src="https://github.com/user-attachments/assets/0837bd39-7c48-4e30-a69a-de4f6b1a4217" />
 
+### Latest Version
+- with WCA inspection Mode Toggle
+- Stop Action Mode Option, now user can choose to stop the timer with space button, mouseclick or wiht any button
+- Add session average, Current Ao5, Current Ao12 and Best Time within the session
+- Add time gap beside the solve time result
+- Add +2 button to add to secs for invalid solved
+- Add DNF button to mark the solve as DNF
+- Add delete solve in history section
+- Add Time gap within solve history
+- Add DISTRACTION FREE MODE when time is running
+  
+  <img width="2556" height="1281" alt="image" src="https://github.com/user-attachments/assets/7219bb31-a507-4c40-afc6-568fbc6534a5" />
+  <img width="2558" height="1259" alt="image" src="https://github.com/user-attachments/assets/d3f63906-eda3-463b-9f06-ff90e1a58d10" />
+
+
 
 
 
