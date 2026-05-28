@@ -5,6 +5,7 @@
         const btnPrevScramble = document.getElementById('btn-prev-scramble');
         const puzzleSelect = document.getElementById('puzzle-select');
         const inspectionToggle = document.getElementById('wca-inspection');
+        const hintDisplay = document.querySelector('.hint');
 
         // --- State Variables ---
         let state = 'idle'; 
@@ -18,18 +19,38 @@
         let scramblesHistory = [];
         let currentScrambleIndex = -1;
 
-        // --- Initialization ---
+        // --- Smart Hint Logic ---
+        function updateHint() {
+    // Detect if the user is on a touch device (mobile/tablet)
+         const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    
+                if (inspectionToggle.checked) {
+             hintDisplay.innerHTML = isTouchDevice 
+                 ? "Tap timer zone above to start 15s inspection, then hold to ready" 
+                 : "Press Space/Click to start 15s inspection, then hold to ready";
+    }       else {
+             hintDisplay.innerHTML = isTouchDevice 
+                 ? "Hold timer zone above to ready <br> Release to start and Tap anywhere to stop" 
+                 : "Hold Spacebar or Click to ready. Release to start.<br>Tap to stop (Alt+Z deletes last solve)";
+    }
+}
+
+       // --- Initialization ---
         function init() {
             loadFromLocalStorage();
             changePuzzle(); 
             updateUI();
-            
+            updateHint(); 
+    
+            // Update hint if they check/uncheck the WCA Inspection box
+            inspectionToggle.addEventListener('change', updateHint);
+    
             document.addEventListener('click', function(e) {
-                if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') {
-                    e.target.blur();
-                }
-            });
+             if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') {
+                e.target.blur();
         }
+    });
+}
 
         // --- Data Management ---
         function loadFromLocalStorage() {
@@ -420,110 +441,146 @@
         }
 
         // --- Input Listeners ---
-        function isInteractiveElement(el) {
-            return el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT' || 
-                   el.closest('button') !== null || el.closest('#times-container') !== null || el.closest('.header-controls') !== null;
-        }
+       // --- Input Listeners ---
 
-        window.addEventListener('keydown', (e) => {
-            if (isInteractiveElement(e.target) && e.target.tagName !== 'BUTTON') return;
+// This function now uses "Smart Zones" to figure out if you are trying to scroll or trying to start the timer.
+function isInteractiveElement(el, e) {
+    // 1. Always allow interacting with actual buttons, dropdowns, and checkboxes
+    if (el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT' || 
+        el.closest('button') !== null || el.closest('.header-controls') !== null) {
+        return true;
+    }
 
-            if (e.altKey && e.code === 'KeyZ') {
-                e.preventDefault();
-                if(allSolves.length > 0) deleteSolve(allSolves[allSolves.length-1].id);
-                return;
-            }
+    // 2. If the timer is actively doing something (inspecting, waiting, ready, running),
+    // we want the ENTIRE screen to act as the timer pad, so we temporarily disable scrolling.
+    if (typeof state !== 'undefined' && state !== 'idle') {
+        return false;
+    }
 
-            const stopType = document.getElementById('stop-type').value;
+    // 3. If the timer is IDLE, anything explicitly inside the stats or history containers is a SCROLL ZONE.
+    if (el.closest('.stats-container') || el.closest('#times-container') || el.closest('footer')) {
+        return true;
+    }
 
-            if (state === 'running') {
-                if (stopType === 'any' || e.code === 'Space') {
-                    e.preventDefault();
-                    handleTimerStop();
-                }
-                return; 
-            }
-
-            if (e.code === 'Space') {
-                e.preventDefault();
-                if (e.repeat) return; 
-                handlePressDown();
-            }
-        });
-
-        window.addEventListener('keyup', (e) => {
-            if (e.code === 'Space') handleReleaseUp();
-        });
-
-
-        window.addEventListener('mousedown', (e) => {
-            if (isInteractiveElement(e.target)) return;
-            if (e.button !== 0) return; 
-            if (e.detail > 1) e.preventDefault(); 
-
-            if (state === 'running') {
-                handleTimerStop();
-                touchLock = true; 
-            } else if (!touchLock) {
-                handlePressDown();
-            }
-        });
-
-        window.addEventListener('mouseup', (e) => {
-            if (isInteractiveElement(e.target)) return;
-            if (e.button !== 0) return;
-
-            if (state === 'waiting' || state === 'ready') {
-                handleReleaseUp();
-            }
-            touchLock = false;
-        });
-
-        let touchLock = false;
+    // 4. Smart Background Detection: If you touch the empty space between boxes, 
+    // we check exactly WHERE your finger landed. If it is physically lower than 
+    // the stats box, we assume you are trying to scroll down to your history.
+    if (e && (e.type.includes('touch') || e.type.includes('mouse'))) {
+        const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+        const statsBox = document.querySelector('.stats-container');
         
-        window.addEventListener('touchstart', (e) => {
-            if (isInteractiveElement(e.target)) return;
-            e.preventDefault(); 
-            
-            if (state === 'running') {
-                handleTimerStop();
-                touchLock = true; 
-            } else if (!touchLock) {
-                handlePressDown();
+        if (statsBox && statsBox.offsetParent !== null) { 
+            if (clientY !== undefined && clientY >= statsBox.getBoundingClientRect().top) {
+                return true; // Treat as a scroll
             }
-        }, { passive: false });
+        }
+    }
 
-        window.addEventListener('touchmove', (e) => {
-            if (document.body.classList.contains('no-scroll') && !isInteractiveElement(e.target)) e.preventDefault();
-        }, { passive: false });
+    // If it didn't match any scroll rules, treat it as the Timer Pad
+    return false;
+}
 
-        window.addEventListener('touchend', (e) => {
-            if (isInteractiveElement(e.target)) return;
+window.addEventListener('keydown', (e) => {
+    // Notice we pass "e" into isInteractiveElement now
+    if (isInteractiveElement(e.target, e) && e.target.tagName !== 'BUTTON') return;
+
+    if (e.altKey && e.code === 'KeyZ') {
+        e.preventDefault();
+        if(allSolves.length > 0) deleteSolve(allSolves[allSolves.length-1].id);
+        return;
+    }
+
+    const stopType = document.getElementById('stop-type').value;
+
+    if (state === 'running') {
+        if (stopType === 'any' || e.code === 'Space') {
             e.preventDefault();
-            if (e.touches.length === 0) {
-                if (state === 'waiting' || state === 'ready') handleReleaseUp();
-                touchLock = false;
-            }
-        }, { passive: false });
+            handleTimerStop();
+        }
+        return; 
+    }
 
-        window.addEventListener('touchcancel', (e) => {
-            if (isInteractiveElement(e.target)) return;
-            if (state === 'waiting' || state === 'ready') {
-                clearTimeout(holdTimeout);
-                state = 'idle';
-                document.body.classList.remove('no-scroll', 'solving-mode');
-                timerDisplay.classList.remove('waiting', 'ready');
-                timerDisplay.textContent = '0.000';
-            }
-            if (e.touches.length === 0) touchLock = false;
-        });
+    if (e.code === 'Space') {
+        e.preventDefault();
+        if (e.repeat) return; 
+        handlePressDown();
+    }
+});
 
-        window.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-        window.addEventListener('dragstart', function (e) { e.preventDefault(); });
-        window.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'c' || e.key === 'x')) {
-                e.preventDefault();
-            }
-        });
+window.addEventListener('keyup', (e) => {
+    if (e.code === 'Space') handleReleaseUp();
+});
 
-        init();
+window.addEventListener('mousedown', (e) => {
+    if (isInteractiveElement(e.target, e)) return;
+    if (e.button !== 0) return; 
+    if (e.detail > 1) e.preventDefault(); 
+
+    if (state === 'running') {
+        handleTimerStop();
+        touchLock = true; 
+    } else if (!touchLock) {
+        handlePressDown();
+    }
+});
+
+window.addEventListener('mouseup', (e) => {
+    if (isInteractiveElement(e.target, e)) return;
+    if (e.button !== 0) return;
+
+    if (state === 'waiting' || state === 'ready') {
+        handleReleaseUp();
+    }
+    touchLock = false;
+});
+
+let touchLock = false;
+
+window.addEventListener('touchstart', (e) => {
+    if (isInteractiveElement(e.target, e)) return;
+    e.preventDefault(); 
+    
+    if (state === 'running') {
+        handleTimerStop();
+        touchLock = true; 
+    } else if (!touchLock) {
+        handlePressDown();
+    }
+}, { passive: false });
+
+window.addEventListener('touchmove', (e) => {
+    if (document.body.classList.contains('no-scroll') && !isInteractiveElement(e.target, e)) {
+        e.preventDefault();
+    }
+}, { passive: false });
+
+window.addEventListener('touchend', (e) => {
+    if (isInteractiveElement(e.target, e)) return;
+    e.preventDefault();
+    if (e.touches.length === 0) {
+        if (state === 'waiting' || state === 'ready') handleReleaseUp();
+        touchLock = false;
+    }
+}, { passive: false });
+
+window.addEventListener('touchcancel', (e) => {
+    if (isInteractiveElement(e.target, e)) return;
+    if (state === 'waiting' || state === 'ready') {
+        clearTimeout(holdTimeout);
+        state = 'idle';
+        document.body.classList.remove('no-scroll', 'solving-mode');
+        timerDisplay.classList.remove('waiting', 'ready');
+        timerDisplay.textContent = '0.000';
+    }
+    if (e.touches.length === 0) touchLock = false;
+});
+
+window.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+window.addEventListener('dragstart', function (e) { e.preventDefault(); });
+window.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'c' || e.key === 'x')) {
+        e.preventDefault();
+    }
+});
+
+init();
