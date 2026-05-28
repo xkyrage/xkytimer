@@ -1,6 +1,8 @@
 {
-  "name": "Xkytimer",
+  "id": "xkytimer-app", 
+  "name": "Xkytimer - Speedcube Trainer",
   "short_name": "Xkytimer",
+  "description": "A lightning-fast, distraction-free speedcube timer featuring smart WCA scrambles, advanced statistics, and offline support.",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#121212",
@@ -12,5 +14,11 @@
       "sizes": "512x512",
       "type": "image/png"
     }
+  ],
+  "lang": "en",
+  "categories": [
+    "games",
+    "productivity",
+    "utilities"
   ]
 }
