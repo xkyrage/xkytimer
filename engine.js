@@ -1,4 +1,4 @@
- // --- DOM Elements ---
+
         const timerDisplay = document.getElementById('timer');
         const scrambleDisplay = document.getElementById('scramble');
         const timesList = document.getElementById('times-list');
@@ -7,7 +7,7 @@
         const inspectionToggle = document.getElementById('wca-inspection');
         const hintDisplay = document.querySelector('.hint');
 
-        // --- State Variables ---
+
         let state = 'idle'; 
         let startTime, animationFrameId;
         let inspectionTimeout, inspectionInterval;
@@ -19,9 +19,8 @@
         let scramblesHistory = [];
         let currentScrambleIndex = -1;
 
-        // --- Smart Hint Logic ---
         function updateHint() {
-    // Detect if the user is on a touch device (mobile/tablet)
+
          const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     
                 if (inspectionToggle.checked) {
@@ -35,14 +34,12 @@
     }
 }
 
-       // --- Initialization ---
         function init() {
             loadFromLocalStorage();
             changePuzzle(); 
             updateUI();
             updateHint(); 
-    
-            // Update hint if they check/uncheck the WCA Inspection box
+ 
             inspectionToggle.addEventListener('change', updateHint);
     
             document.addEventListener('click', function(e) {
@@ -52,7 +49,7 @@
     });
 }
 
-        // --- Data Management ---
+
         function loadFromLocalStorage() {
             try {
                 const stored = localStorage.getItem('xkytimer_solves');
@@ -65,7 +62,6 @@
             updateUI();
         }
 
-        // --- Smart Scramble Generation ---
         const PUZZLE_DEFS = {
             '2x2': { moves: ['U','R','F'], mods: ['',"'",'2'], len: 11 },
             '3x3': { moves: ['U','D','R','L','F','B'], mods: ['',"'",'2'], len: 20 },
@@ -137,7 +133,7 @@
             btnPrevScramble.disabled = currentScrambleIndex === 0;
         }
 
-        // --- Math & Stats ---
+
         function formatTime(ms) {
             if (!ms || ms === Infinity || isNaN(ms)) return 'DNF';
             let totalSecs = ms / 1000;
@@ -173,17 +169,17 @@
         function updateUI() {
             timesList.innerHTML = '';
             
-            // Filter solves by the CURRENT puzzle so stats don't mix!
+
             let currentPuzzleSolves = allSolves.filter(s => s.puzzle === puzzleSelect.value);
             let validTimes = currentPuzzleSolves.map(getActualTimeMs).filter(t => t !== Infinity);
             
-            // Stats
+
             document.getElementById('stat-best').textContent = validTimes.length > 0 ? formatTime(Math.min(...validTimes)) : '--';
             document.getElementById('stat-mean').textContent = validTimes.length > 0 ? formatTime(validTimes.reduce((a,b)=>a+b,0) / validTimes.length) : '--';
             document.getElementById('stat-ao5').textContent = calculateAverage(currentPuzzleSolves, 5);
             document.getElementById('stat-ao12').textContent = calculateAverage(currentPuzzleSolves, 12);
 
-            // History List (Show all, but calculate gaps safely)
+
             const displaySolves = [...allSolves].reverse();
             displaySolves.forEach((solve, index) => {
                 const solveNum = displaySolves.length - index; 
@@ -194,7 +190,7 @@
                 if (solve.penalty === 'DNF') timeClass += ' dnf';
 
                 let gapHtml = '';
-                // Find the previous solve of the SAME puzzle type
+
                 let prevSolve = displaySolves.slice(index + 1).find(s => s.puzzle === solve.puzzle);
                 
                 if (prevSolve) { 
@@ -250,7 +246,7 @@
             }
         }
 
-        // --- Timer Control Functions ---
+
         function updateInspectionDisplay() {
             if(inspectionSeconds > 0) {
                 timerDisplay.textContent = inspectionSeconds;
@@ -386,7 +382,7 @@
             animationFrameId = requestAnimationFrame(updateTimerLoop);
         }
 
-        // --- Data Features ---
+
         function clearSession() {
             if (confirm("Clear all recorded solves? This will start a fresh session.")) {
                 allSolves = [];
@@ -440,31 +436,26 @@
             reader.readAsText(file);
         }
 
-        // --- Input Listeners ---
-       // --- Input Listeners ---
 
-// This function now uses "Smart Zones" to figure out if you are trying to scroll or trying to start the timer.
+
+
 function isInteractiveElement(el, e) {
-    // 1. Always allow interacting with actual buttons, dropdowns, and checkboxes
+
     if (el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT' || 
         el.closest('button') !== null || el.closest('.header-controls') !== null) {
         return true;
     }
 
-    // 2. If the timer is actively doing something (inspecting, waiting, ready, running),
-    // we want the ENTIRE screen to act as the timer pad, so we temporarily disable scrolling.
     if (typeof state !== 'undefined' && state !== 'idle') {
         return false;
     }
 
-    // 3. If the timer is IDLE, anything explicitly inside the stats or history containers is a SCROLL ZONE.
+
     if (el.closest('.stats-container') || el.closest('#times-container') || el.closest('footer')) {
         return true;
     }
 
-    // 4. Smart Background Detection: If you touch the empty space between boxes, 
-    // we check exactly WHERE your finger landed. If it is physically lower than 
-    // the stats box, we assume you are trying to scroll down to your history.
+
     if (e && (e.type.includes('touch') || e.type.includes('mouse'))) {
         const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
         const statsBox = document.querySelector('.stats-container');
@@ -476,7 +467,6 @@ function isInteractiveElement(el, e) {
         }
     }
 
-    // If it didn't match any scroll rules, treat it as the Timer Pad
     return false;
 }
 

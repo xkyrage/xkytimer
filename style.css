@@ -9,10 +9,10 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            overflow-x: hidden; /* Prevents accidental horizontal scrolling */
+            overflow-x: hidden;
         }
 
-        /* --- THE MOBILE SCROLL LOCK & DISTRACTION FREE MODE --- */
+ 
         body.no-scroll {
             overflow: hidden !important;
             touch-action: none !important; 
@@ -31,7 +31,7 @@
             justify-content: center; 
         }
 
-        /* Distraction-free timer sizing */
+
         body.solving-mode #timer {
             font-size: 10vw; 
         }
@@ -142,7 +142,7 @@
         .btn-danger:hover { background: #4a1a1a; border-color: #ff5252; color: #ffdddd; }
 
         #timer {
-            font-size: clamp(5rem, 15vw, 10rem); /* Fluid typography: min 5rem, scales with screen, max 10rem */
+            font-size: clamp(5rem, 15vw, 10rem); 
             font-weight: bold;
             font-variant-numeric: tabular-nums;
             margin-bottom: 0.5rem;
@@ -153,16 +153,15 @@
             box-sizing: border-box;
         }
 
-        /* Timer States */
+
         .ready { color: #00e676 !important; }
         .waiting { color: #ff9800 !important; }
         .stopped { color: #51ff00 !important; }
         .inspecting { color: #fdd835 !important; }
 
-        /* Big Timer Gap Display */
         .main-time-gap {
             font-size: 0.35em; 
-            margin-left: 2%; /* Changed from px to % for better mobile scaling */
+            margin-left: 2%; 
             vertical-align: baseline; 
             font-weight: normal;
         }
@@ -331,9 +330,7 @@
             letter-spacing: 1px;
         }
 
-        /* =========================================================
-           MOBILE RESPONSIVENESS (Screens narrower than 768px)
-           ========================================================= */
+  
         @media (max-width: 768px) {
             header {
                 flex-direction: column;
@@ -347,7 +344,7 @@
             }
 
             select {
-                flex-grow: 1; /* Makes dropdowns stretch nicely on mobile */
+                flex-grow: 1; 
             }
 
             #scramble {
@@ -359,12 +356,11 @@
                 padding: 1rem;
             }
 
-            /* Breaks the stats into a 2x2 grid instead of 1 long row */
             .stat-box {
                 min-width: 40%;
             }
 
-            /* Removes the vertical line on mobile since they stack */
+       
             .stat-best-box {
                 border-left: none;
                 padding-left: 0;
@@ -388,7 +384,7 @@
             }
             
             .history-buttons button {
-                flex-grow: 1; /* Buttons fill the width */
+                flex-grow: 1; 
             }
 
             .solve-header {
@@ -398,6 +394,6 @@
 
             .penalty-controls {
                 width: 50%;
-                justify-content: flex-end; /* Pushes penalty buttons to the right */
+                justify-content: flex-end; 
             }
         }
