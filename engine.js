@@ -1,0 +1,529 @@
+ // --- DOM Elements ---
+        const timerDisplay = document.getElementById('timer');
+        const scrambleDisplay = document.getElementById('scramble');
+        const timesList = document.getElementById('times-list');
+        const btnPrevScramble = document.getElementById('btn-prev-scramble');
+        const puzzleSelect = document.getElementById('puzzle-select');
+        const inspectionToggle = document.getElementById('wca-inspection');
+
+        // --- State Variables ---
+        let state = 'idle'; 
+        let startTime, animationFrameId;
+        let inspectionTimeout, inspectionInterval;
+        let inspectionSeconds = 15;
+        let holdTimeout;
+        const HOLD_REQUIRED_MS = 300; 
+        
+        let allSolves = [];
+        let scramblesHistory = [];
+        let currentScrambleIndex = -1;
+
+        // --- Initialization ---
+        function init() {
+            loadFromLocalStorage();
+            changePuzzle(); 
+            updateUI();
+            
+            document.addEventListener('click', function(e) {
+                if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') {
+                    e.target.blur();
+                }
+            });
+        }
+
+        // --- Data Management ---
+        function loadFromLocalStorage() {
+            try {
+                const stored = localStorage.getItem('xkytimer_solves');
+                if (stored) allSolves = JSON.parse(stored);
+            } catch (e) { allSolves = []; }
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('xkytimer_solves', JSON.stringify(allSolves));
+            updateUI();
+        }
+
+        // --- Smart Scramble Generation ---
+        const PUZZLE_DEFS = {
+            '2x2': { moves: ['U','R','F'], mods: ['',"'",'2'], len: 11 },
+            '3x3': { moves: ['U','D','R','L','F','B'], mods: ['',"'",'2'], len: 20 },
+            '4x4': { moves: ['U','D','R','L','F','B','Uw','Dw','Rw','Lw','Fw','Bw'], mods: ['',"'",'2'], len: 45 },
+            '5x5': { moves: ['U','D','R','L','F','B','Uw','Dw','Rw','Lw','Fw','Bw'], mods: ['',"'",'2'], len: 60 },
+            '6x6': { moves: ['U','D','R','L','F','B','Uw','Dw','Rw','Lw','Fw','Bw','3Uw','3Dw','3Rw','3Lw','3Fw','3Bw'], mods: ['',"'",'2'], len: 80 },
+            '7x7': { moves: ['U','D','R','L','F','B','Uw','Dw','Rw','Lw','Fw','Bw','3Uw','3Dw','3Rw','3Lw','3Fw','3Bw'], mods: ['',"'",'2'], len: 100 },
+            '8x8': { moves: ['U','D','R','L','F','B','Uw','Dw','Rw','Lw','Fw','Bw','3Uw','3Dw','3Rw','3Lw','3Fw','3Bw','4Uw','4Dw','4Rw','4Lw','4Fw','4Bw'], mods: ['',"'",'2'], len: 120 },
+            '9x9': { moves: ['U','D','R','L','F','B','Uw','Dw','Rw','Lw','Fw','Bw','3Uw','3Dw','3Rw','3Lw','3Fw','3Bw','4Uw','4Dw','4Rw','4Lw','4Fw','4Bw'], mods: ['',"'",'2'], len: 120 },
+            'pyraminx': { moves: ['U','L','R','B'], mods: ['',"'",'2'], tips: ['u','l','r','b'], tipMods: ['',"'" ], len: 10 }
+        };
+
+        function generateScramble(type) {
+            const def = PUZZLE_DEFS[type];
+            let scramble = [];
+            const axisMatches = {
+                'U':0, 'D':0, 'Uw':0, 'Dw':0, '3Uw':0, '3Dw':0, '4Uw':0, '4Dw':0,
+                'R':1, 'L':1, 'Rw':1, 'Lw':1, '3Rw':1, '3Lw':1, '4Rw':1, '4Lw':1,
+                'F':2, 'B':2, 'Fw':2, 'Bw':2, '3Fw':2, '3Bw':2, '4Fw':2, '4Bw':2
+            };
+
+            let lastAxis = -1;
+            let secondLastAxis = -1;
+
+            for (let i = 0; i < def.len; i++) {
+                let move, axis;
+                do {
+                    move = def.moves[Math.floor(Math.random() * def.moves.length)];
+                    axis = axisMatches[move];
+                } while (axis === lastAxis || (axis === secondLastAxis && axis === lastAxis));
+                
+                secondLastAxis = lastAxis;
+                lastAxis = axis;
+                
+                let mod = def.mods[Math.floor(Math.random() * def.mods.length)];
+                scramble.push(move + mod);
+            }
+
+            if (def.tips) {
+                def.tips.forEach(tip => {
+                    if (Math.random() > 0.5) {
+                        let mod = def.tipMods[Math.floor(Math.random() * def.tipMods.length)];
+                        scramble.push(tip + mod);
+                    }
+                });
+            }
+
+            return scramble.join(' ');
+        }
+
+        function changePuzzle() {
+            scramblesHistory = [generateScramble(puzzleSelect.value)];
+            currentScrambleIndex = 0;
+            scrambleDisplay.textContent = scramblesHistory[0];
+            btnPrevScramble.disabled = true;
+            puzzleSelect.blur();
+        }
+
+        function navigateScramble(direction) {
+            if (direction === 1) {
+                currentScrambleIndex++;
+                if (currentScrambleIndex >= scramblesHistory.length) {
+                    scramblesHistory.push(generateScramble(puzzleSelect.value));
+                }
+            } else if (direction === -1 && currentScrambleIndex > 0) {
+                currentScrambleIndex--;
+            }
+            scrambleDisplay.textContent = scramblesHistory[currentScrambleIndex];
+            btnPrevScramble.disabled = currentScrambleIndex === 0;
+        }
+
+        // --- Math & Stats ---
+        function formatTime(ms) {
+            if (!ms || ms === Infinity || isNaN(ms)) return 'DNF';
+            let totalSecs = ms / 1000;
+            let mins = Math.floor(totalSecs / 60);
+            let secs = Math.floor(totalSecs % 60);
+            let millis = Math.floor(ms % 1000);
+            let str = mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}`;
+            return `${str}.${millis.toString().padStart(3, '0')}`;
+        }
+
+        function getActualTimeMs(solve) {
+            if (solve.penalty === 'DNF') return Infinity;
+            return solve.timeMs + (solve.penalty === '+2' ? 2000 : 0);
+        }
+
+        function calculateAverage(solvesArray, count) {
+            if (solvesArray.length < count) return '--';
+            
+            let recent = solvesArray.slice(-count);
+            let times = recent.map(s => getActualTimeMs(s));
+            
+            let dnfCount = times.filter(t => t === Infinity).length;
+            if (dnfCount > 1) return 'DNF';
+
+            times.sort((a, b) => a - b);
+            times.pop(); 
+            times.shift(); 
+            
+            let sum = times.reduce((a, b) => a + b, 0);
+            return formatTime(sum / times.length);
+        }
+
+        function updateUI() {
+            timesList.innerHTML = '';
+            
+            // Filter solves by the CURRENT puzzle so stats don't mix!
+            let currentPuzzleSolves = allSolves.filter(s => s.puzzle === puzzleSelect.value);
+            let validTimes = currentPuzzleSolves.map(getActualTimeMs).filter(t => t !== Infinity);
+            
+            // Stats
+            document.getElementById('stat-best').textContent = validTimes.length > 0 ? formatTime(Math.min(...validTimes)) : '--';
+            document.getElementById('stat-mean').textContent = validTimes.length > 0 ? formatTime(validTimes.reduce((a,b)=>a+b,0) / validTimes.length) : '--';
+            document.getElementById('stat-ao5').textContent = calculateAverage(currentPuzzleSolves, 5);
+            document.getElementById('stat-ao12').textContent = calculateAverage(currentPuzzleSolves, 12);
+
+            // History List (Show all, but calculate gaps safely)
+            const displaySolves = [...allSolves].reverse();
+            displaySolves.forEach((solve, index) => {
+                const solveNum = displaySolves.length - index; 
+                let finalTimeStr = formatTime(getActualTimeMs(solve));
+                
+                let timeClass = 'solve-time';
+                if (solve.penalty === '+2') timeClass += ' plus-two';
+                if (solve.penalty === 'DNF') timeClass += ' dnf';
+
+                let gapHtml = '';
+                // Find the previous solve of the SAME puzzle type
+                let prevSolve = displaySolves.slice(index + 1).find(s => s.puzzle === solve.puzzle);
+                
+                if (prevSolve) { 
+                    let currentMs = getActualTimeMs(solve);
+                    let prevMs = getActualTimeMs(prevSolve);
+
+                    if (currentMs !== Infinity && prevMs !== Infinity) {
+                        let diffMs = currentMs - prevMs;
+                        if (diffMs > 0) {
+                            gapHtml = `<span class="time-gap plus">(+${formatTime(diffMs)})</span>`;
+                        } else if (diffMs < 0) {
+                            gapHtml = `<span class="time-gap minus">(-${formatTime(Math.abs(diffMs))})</span>`;
+                        } else {
+                            gapHtml = `<span class="time-gap" style="color: #888;">(0.000)</span>`;
+                        }
+                    }
+                }
+
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="solve-header">
+                        <div class="solve-info">
+                            <span style="min-width: 30px;">${solveNum}.</span>
+                            <span class="${timeClass}">${finalTimeStr}</span>
+                            ${gapHtml}
+                            <span style="font-size: 0.8rem; color:#888;">[${solve.puzzle}]</span>
+                            <span style="font-size: 0.8rem; color:#666;">(${formatTime(solve.timeMs)})</span>
+                        </div>
+                        <div class="penalty-controls">
+                            <button class="btn-penalty ${solve.penalty === '+2' ? 'active' : ''}" onclick="togglePenalty(${solve.id}, '+2')">+2</button>
+                            <button class="btn-penalty ${solve.penalty === 'DNF' ? 'active' : ''}" onclick="togglePenalty(${solve.id}, 'DNF')">DNF</button>
+                            <button class="btn-penalty" onclick="deleteSolve(${solve.id})" style="color: #ff5252;">&times;</button>
+                        </div>
+                    </div>
+                    <div class="solve-scramble">${solve.scramble}</div>
+                `;
+                timesList.appendChild(li);
+            });
+        }
+
+        function togglePenalty(id, type) {
+            let solve = allSolves.find(s => s.id === id);
+            if (solve) {
+                solve.penalty = solve.penalty === type ? 'none' : type;
+                saveToLocalStorage();
+            }
+        }
+
+        function deleteSolve(id) {
+            if(confirm('Delete this solve?')) {
+                allSolves = allSolves.filter(s => s.id !== id);
+                saveToLocalStorage();
+            }
+        }
+
+        // --- Timer Control Functions ---
+        function updateInspectionDisplay() {
+            if(inspectionSeconds > 0) {
+                timerDisplay.textContent = inspectionSeconds;
+            } else if (inspectionSeconds > -2) {
+                timerDisplay.textContent = '+2';
+            } else {
+                timerDisplay.textContent = 'DNF';
+                state = 'idle'; 
+                clearInterval(inspectionInterval);
+                document.body.classList.remove('no-scroll', 'solving-mode');
+            }
+        }
+
+        function handlePressDown() {
+            if (state === 'idle') {
+                document.body.classList.add('no-scroll'); 
+                
+                if (inspectionToggle.checked) {
+                    state = 'inspecting';
+                    inspectionSeconds = 15;
+                    timerDisplay.classList.add('inspecting');
+                    timerDisplay.classList.remove('stopped'); 
+                    document.body.classList.add('solving-mode'); 
+                    updateInspectionDisplay();
+                    
+                    inspectionInterval = setInterval(() => {
+                        inspectionSeconds--;
+                        updateInspectionDisplay();
+                    }, 1000);
+                } else {
+                    beginWaitPhase();
+                }
+            } else if (state === 'inspecting') {
+                beginWaitPhase();
+            }
+        }
+
+        function beginWaitPhase() {
+            state = 'waiting';
+            timerDisplay.classList.add('waiting');
+            timerDisplay.classList.remove('stopped', 'ready', 'inspecting');
+            
+            timerDisplay.textContent = '0.000';
+
+            holdTimeout = setTimeout(() => {
+                if (state === 'waiting') {
+                    state = 'ready';
+                    timerDisplay.classList.remove('waiting');
+                    timerDisplay.classList.add('ready');
+                    document.body.classList.add('solving-mode'); 
+                }
+            }, HOLD_REQUIRED_MS);
+        }
+
+        function handleReleaseUp() {
+            if (state === 'waiting') {
+                clearTimeout(holdTimeout);
+                if (inspectionToggle.checked && inspectionSeconds > -2) {
+                    state = 'inspecting';
+                    timerDisplay.classList.remove('waiting');
+                    timerDisplay.classList.add('inspecting');
+                    updateInspectionDisplay();
+                } else {
+                    state = 'idle';
+                    timerDisplay.classList.remove('waiting');
+                    document.body.classList.remove('no-scroll', 'solving-mode');
+                    timerDisplay.textContent = '0.000';
+                }
+            } else if (state === 'ready') {
+                clearInterval(inspectionInterval);
+                state = 'running';
+                timerDisplay.classList.remove('ready');
+                startTime = performance.now();
+                animationFrameId = requestAnimationFrame(updateTimerLoop);
+            }
+        }
+
+        function handleTimerStop() {
+            if (state === 'running') {
+                state = 'idle';
+                cancelAnimationFrame(animationFrameId);
+                const finalTimeMs = performance.now() - startTime;
+                
+                let autoPenalty = 'none';
+                if(inspectionToggle.checked) {
+                    if (inspectionSeconds <= 0 && inspectionSeconds > -2) autoPenalty = '+2';
+                    if (inspectionSeconds <= -2) autoPenalty = 'DNF';
+                }
+
+                let gapHtml = '';
+                let currentPuzzleSolves = allSolves.filter(s => s.puzzle === puzzleSelect.value);
+                
+                if (currentPuzzleSolves.length > 0) {
+                    let prevSolve = currentPuzzleSolves[currentPuzzleSolves.length - 1];
+                    let prevMs = getActualTimeMs(prevSolve);
+                    
+                    let currentMs = finalTimeMs;
+                    if (autoPenalty === '+2') currentMs += 2000;
+                    if (autoPenalty === 'DNF') currentMs = Infinity;
+
+                    if (currentMs !== Infinity && prevMs !== Infinity) {
+                        let diffMs = currentMs - prevMs;
+                        if (diffMs > 0) {
+                            gapHtml = `<span class="main-time-gap plus">(+${formatTime(diffMs)})</span>`;
+                        } else if (diffMs < 0) {
+                            gapHtml = `<span class="main-time-gap minus">(-${formatTime(Math.abs(diffMs))})</span>`;
+                        } else {
+                            gapHtml = `<span class="main-time-gap" style="color: #888;">(0.000)</span>`;
+                        }
+                    }
+                }
+
+                timerDisplay.innerHTML = formatTime(finalTimeMs) + gapHtml;
+                timerDisplay.classList.add('stopped');
+                document.body.classList.remove('no-scroll', 'solving-mode'); 
+
+                allSolves.push({
+                    id: Date.now(),
+                    puzzle: puzzleSelect.value,
+                    timeMs: finalTimeMs,
+                    penalty: autoPenalty,
+                    scramble: scramblesHistory[currentScrambleIndex],
+                    date: new Date().toISOString()
+                });
+                
+                saveToLocalStorage();
+                navigateScramble(1);
+            }
+        }
+
+        function updateTimerLoop() {
+            timerDisplay.textContent = formatTime(performance.now() - startTime);
+            animationFrameId = requestAnimationFrame(updateTimerLoop);
+        }
+
+        // --- Data Features ---
+        function clearSession() {
+            if (confirm("Clear all recorded solves? This will start a fresh session.")) {
+                allSolves = [];
+                saveToLocalStorage();
+                
+                state = 'idle';
+                timerDisplay.textContent = '0.000';
+                timerDisplay.className = ''; 
+                
+                clearInterval(inspectionInterval);
+                clearTimeout(holdTimeout);
+                document.body.classList.remove('no-scroll');
+            }
+        }
+
+        function exportData() {
+            if (allSolves.length === 0) return alert("No solves to export.");
+            const dataStr = JSON.stringify({ app: "xkytimer", solves: allSolves }, null, 2);
+            const blob = new Blob([dataStr], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `xkytimer_export.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            event.target.value = '';
+            
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (!parsed.solves) throw new Error("Invalid format");
+                    
+                    const existingIds = new Set(allSolves.map(s => s.id));
+                    parsed.solves.forEach(solve => {
+                        if (!existingIds.has(solve.id)) allSolves.push(solve);
+                    });
+                    
+                    allSolves.sort((a, b) => a.id - b.id);
+                    saveToLocalStorage();
+                    alert("Import successful!");
+                } catch (error) { alert("Failed to parse file."); }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- Input Listeners ---
+        function isInteractiveElement(el) {
+            return el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT' || 
+                   el.closest('button') !== null || el.closest('#times-container') !== null || el.closest('.header-controls') !== null;
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (isInteractiveElement(e.target) && e.target.tagName !== 'BUTTON') return;
+
+            if (e.altKey && e.code === 'KeyZ') {
+                e.preventDefault();
+                if(allSolves.length > 0) deleteSolve(allSolves[allSolves.length-1].id);
+                return;
+            }
+
+            const stopType = document.getElementById('stop-type').value;
+
+            if (state === 'running') {
+                if (stopType === 'any' || e.code === 'Space') {
+                    e.preventDefault();
+                    handleTimerStop();
+                }
+                return; 
+            }
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (e.repeat) return; 
+                handlePressDown();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') handleReleaseUp();
+        });
+
+
+        window.addEventListener('mousedown', (e) => {
+            if (isInteractiveElement(e.target)) return;
+            if (e.button !== 0) return; 
+            if (e.detail > 1) e.preventDefault(); 
+
+            if (state === 'running') {
+                handleTimerStop();
+                touchLock = true; 
+            } else if (!touchLock) {
+                handlePressDown();
+            }
+        });
+
+        window.addEventListener('mouseup', (e) => {
+            if (isInteractiveElement(e.target)) return;
+            if (e.button !== 0) return;
+
+            if (state === 'waiting' || state === 'ready') {
+                handleReleaseUp();
+            }
+            touchLock = false;
+        });
+
+        let touchLock = false;
+        
+        window.addEventListener('touchstart', (e) => {
+            if (isInteractiveElement(e.target)) return;
+            e.preventDefault(); 
+            
+            if (state === 'running') {
+                handleTimerStop();
+                touchLock = true; 
+            } else if (!touchLock) {
+                handlePressDown();
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            if (document.body.classList.contains('no-scroll') && !isInteractiveElement(e.target)) e.preventDefault();
+        }, { passive: false });
+
+        window.addEventListener('touchend', (e) => {
+            if (isInteractiveElement(e.target)) return;
+            e.preventDefault();
+            if (e.touches.length === 0) {
+                if (state === 'waiting' || state === 'ready') handleReleaseUp();
+                touchLock = false;
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchcancel', (e) => {
+            if (isInteractiveElement(e.target)) return;
+            if (state === 'waiting' || state === 'ready') {
+                clearTimeout(holdTimeout);
+                state = 'idle';
+                document.body.classList.remove('no-scroll', 'solving-mode');
+                timerDisplay.classList.remove('waiting', 'ready');
+                timerDisplay.textContent = '0.000';
+            }
+            if (e.touches.length === 0) touchLock = false;
+        });
+
+        window.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+        window.addEventListener('dragstart', function (e) { e.preventDefault(); });
+        window.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'c' || e.key === 'x')) {
+                e.preventDefault();
+            }
+        });
+
+        init();
