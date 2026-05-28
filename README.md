@@ -21,6 +21,7 @@ Export Format
 
 ### Latest Version
 - with WCA inspection Mode Toggle
+- Add Puzzle selection for scramble logic, for now its only for 2x2x2, 3x3x3 and pyraminx
 - Stop Action Mode Option, now user can choose to stop the timer with space button, mouseclick or wiht any button
 - Add session average, Current Ao5, Current Ao12 and Best Time within the session
 - Add time gap beside the solve time result
