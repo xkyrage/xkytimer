@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.xkytimer_speedcube_timer.twa",
+        "sha256_cert_fingerprints": ["A3:C3:BB:A4:9A:4B:BC:4F:9C:9D:95:C3:17:42:9F:BE:B1:4A:6E:EA:01:48:41:D5:5D:6F:FC:D6:0D:D2:3E:FF"]
+      }
+    }]
