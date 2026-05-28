@@ -4,253 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" sizes="32x32" href="asset/favicon.png">
-     <title>Xkytimer - Speedcube Trainer</title>
-    <style>
-        body {
-            background-color: #121212;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        /* --- THE MOBILE SCROLL LOCK --- */
-        /* When this class is applied, the browser completely disables native swiping/scrolling */
-        body.no-scroll {
-            overflow: hidden !important;
-            touch-action: none !important; 
-        }
-        /* ------------------------------ */
-
-        header {
-            width: 100%;
-            background-color: #0f141e;
-            padding: 1rem 0;
-            box-sizing: border-box;
-            border-bottom: 1px solid #1e293b;
-            margin-bottom: 3rem;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
-        .header-title {
-            display: inline-block;
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #ffffff;
-            margin: 0;
-            letter-spacing: 0.5px;
-            animation: marquee 12s linear infinite; 
-        }
-
-        @keyframes marquee {
-            0% { transform: translateX(100vw); }
-            100% { transform: translateX(-100%); }
-        }
-
-        .scramble-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 2rem;
-            width: 100%;
-            max-width: 800px;
-            padding: 0 1rem;
-        }
-
-        .scramble-label {
-            font-size: 0.9rem;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 0.5rem;
-        }
-
-        .scramble-container {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            width: 100%;
-            justify-content: center;
-        }
-
-        #scramble {
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-            text-align: center;
-            color: #4da6ff;
-            min-width: 400px;
-        }
-
-        button {
-            background: #2a2a2a;
-            color: #fff;
-            border: 1px solid #444;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: inherit;
-            transition: background 0.2s, border-color 0.2s;
-        }
-
-        button:hover { background: #3a3a3a; }
-        button:disabled { background: #1a1a1a; color: #555; cursor: not-allowed; border-color: #222; }
-
-        .btn-danger:hover {
-            background: #4a1a1a;
-            border-color: #ff5252;
-            color: #ffdddd;
-        }
-
-        #timer {
-            font-size: 8rem;
-            font-weight: bold;
-            font-variant-numeric: tabular-nums;
-            margin-bottom: 1rem;
-            transition: color 0.1s;
-        }
-
-        /* Timer States */
-        .ready { color: #00e676 !important; }
-        .waiting { color: #ff9800 !important; }
-        .stopped { color: #52ff61 !important; }
-
-        .hint {
-            color: #888;
-            margin-bottom: 2rem;
-            text-align: center;
-            padding: 0 1rem;
-        }
-
-        .stats-container {
-            display: flex;
-            gap: 2rem;
-            margin-bottom: 2rem;
-            background: #1a1a1a;
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            border: 1px solid #333;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .stat-box {
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: #aaa;
-            text-transform: uppercase;
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #00e676;
-        }
-
-        #data-controls {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            width: 100%;
-            max-width: 600px;
-            justify-content: flex-end;
-            padding: 0 1rem;
-            box-sizing: border-box;
-            flex-wrap: wrap;
-        }
-
-        #times-container {
-            width: 100%;
-            max-width: 600px;
-            background: #1e1e1e;
-            border-radius: 8px;
-            padding: 1rem;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #best-history-highlight {
-            background: #151a15;
-            border: 1px solid #00e676;
-            border-radius: 6px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            display: none;
-        }
-
-        .best-highlight-title {
-            font-size: 0.8rem;
-            color: #00e676;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 0 0 0.5rem 0;
-            font-weight: bold;
-        }
-
-        .best-highlight-data {
-            display: flex;
-            justify-content: space-between;
-            font-size: 1.3rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .best-highlight-time {
-            color: #00e676;
-            font-weight: bold;
-        }
-
-        #times-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        #times-list li {
-            display: flex;
-            flex-direction: column;
-            padding: 0.75rem;
-            border-bottom: 1px solid #333;
-        }
-
-        .solve-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 1.2rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .solve-scramble {
-            font-size: 0.8rem;
-            color: #666;
-            word-break: break-all;
-        }
-
-        footer {
-            margin-top: auto;
-            padding-top: 2rem;
-            padding-bottom: 1rem;
-            color: #666;
-            font-size: 0.85rem;
-            text-align: center;
-            letter-spacing: 1px;
-        }
-    </style>
+    <title>Xkytimer - Speedcube Trainer</title>
+    <link rel="stylesheet" href="style.css">
+  
 </head>
 <body>
 
     <header>
-        <h1 class="header-title">Xkytimer - Speedcube Trainer</h1>
+          <h1 class="header-title">Xkytimer - Speedcube Trainer</h1>
+        <div class="header-controls">
+            <select id="stop-type" onchange="this.blur()">
+                <option value="any">Stop: Any Key / Click</option>
+                <option value="space">Stop: Space / Click</option>
+            </select>
+            
+            <select id="puzzle-select" onchange="changePuzzle()">
+                <option value="2x2">2x2x2 Cube</option>
+                <option value="3x3" selected>3x3x3 Cube</option>
+                <!-- <option value="4x4">4x4x4 Cube</option>
+                <option value="5x5">5x5x5 Cube</option>
+                <option value="6x6">6x6x6 Cube</option>
+                <option value="7x7">7x7x7 Cube</option>
+                <option value="8x8">8x8x8 Cube</option>
+                <option value="9x9">9x9x9 Cube</option> -->
+                <option value="pyraminx">Pyraminx</option>
+            </select>
+            <div class="toggle-container">
+                <input type="checkbox" id="wca-inspection" onchange="document.querySelector('.hint').textContent = this.checked ? 'Tap Spacebar/Screen to start 15s inspection, then hold to ready and release to start make sure to start before the inspection countdown end.' : 'Hold Spacebar or touch screen to ready, release to start. Tap to stop. (Alt+Z deletes last solve)';">
+                <label for="wca-inspection">WCA Inspection (15s)</label>
+            </div>
+        </div>
     </header>
 
     <div class="scramble-section">
@@ -263,42 +46,37 @@
     </div>
 
     <div id="timer">0.000</div>
-    <div class="hint">Hold Spacebar or touch the screen to ready, release to start. Press any key or tap to stop.</div>
+    <div class="hint">Hold Spacebar, Click, or Touch to ready. Release to start.<br>Tap to stop. (Alt+Z deletes last solve)</div>
 
     <div class="stats-container">
         <div class="stat-box">
-            <div class="stat-label">Session Best</div>
-            <div class="stat-value" id="session-best">--</div>
-        </div>
-        <div class="stat-box">
             <div class="stat-label">Session Avg</div>
-            <div class="stat-value" id="session-average">--</div>
+            <div class="stat-value" id="stat-mean">--</div>
         </div>
         <div class="stat-box">
-            <div class="stat-label">All-Time Best</div>
-            <div class="stat-value" id="all-time-best">--</div>
+            <div class="stat-label">Current Ao5</div>
+            <div class="stat-value" id="stat-ao5">--</div>
         </div>
-    </div>
-
-    <div id="data-controls">
-        <button class="btn-danger" onclick="clearSession()">Clear Session</button>
-        <button onclick="exportData()">Export Data (.txt)</button>
-        <button onclick="document.getElementById('import-file').click()">Import Data</button>
-        <input type="file" id="import-file" accept=".txt" style="display: none;" onchange="importData(event)">
+        <div class="stat-box">
+            <div class="stat-label">Current Ao12</div>
+            <div class="stat-value" id="stat-ao12">--</div>
+        </div>
+        <div class="stat-box stat-best-box">
+            <div class="stat-label">Session Best</div>
+            <div class="stat-value" id="stat-best">--</div>
+        </div>
     </div>
 
     <div id="times-container">
-        <h3 style="margin-top: 0; margin-bottom: 1rem;">Solve History</h3>
-        
-        <div id="best-history-highlight">
-            <div class="best-highlight-title">Personal Best Record</div>
-            <div class="best-highlight-data">
-                <span id="best-history-label">Solve --</span>
-                <span id="best-history-time" class="best-highlight-time">--</span>
+        <div class="history-controls">
+            <h3 style="margin: 0;">Solve History</h3>
+            <div class="history-buttons">
+                <button onclick="document.getElementById('import-file').click()">Import</button>
+                <input type="file" id="import-file" accept=".txt" style="display: none;" onchange="importData(event)">
+                <button onclick="exportData()">Export</button>
+                <button class="btn-danger" onclick="clearSession()">Clear</button>
             </div>
-            <div id="best-history-scramble" class="solve-scramble">--</div>
         </div>
-
         <ul id="times-list"></ul>
     </div>
 
@@ -309,421 +87,7 @@
             </a></strong> - xkyrage · xkytimer - Professional Speedcube Trainer © 2026
     </footer>
 
-    <script>
-      // --- Core Variables ---
-        const timerDisplay = document.getElementById('timer');
-        const scrambleDisplay = document.getElementById('scramble');
-        const timesList = document.getElementById('times-list');
-        const sessionBestDisplay = document.getElementById('session-best');
-        const sessionAverageDisplay = document.getElementById('session-average');
-        const allTimeBestDisplay = document.getElementById('all-time-best');
-        const btnPrevScramble = document.getElementById('btn-prev-scramble');
-        const bestHistoryHighlight = document.getElementById('best-history-highlight');
+    <script src="engine.js"></script>
 
-        let state = 'idle'; // idle -> waiting -> ready -> running
-        let startTime;
-        let animationFrameId;
-        
-        let allSolves = [];
-        let sessionSolves = [];
-        
-        // Scramble Management
-        let scramblesHistory = [];
-        let currentScrambleIndex = -1;
-
-        // Security / Rate Limit
-        let lastImportTime = 0;
-        const IMPORT_COOLDOWN_MS = 5000;
-
-        // Inspection / Hold Variables
-        let holdTimeout;
-        const HOLD_REQUIRED_MS = 1500; // 1.5 seconds
-
-        // --- Initialization ---
-        function init() {
-            loadFromLocalStorage();
-            updateStatsUI();
-            renderSolveHistory();
-            navigateScramble(1); 
-            
-            document.querySelectorAll('button').forEach(btn => {
-                btn.addEventListener('click', function () { this.blur(); });
-            });
-        }
-
-        // --- Storage & Data Management ---
-        function loadFromLocalStorage() {
-            try {
-                const stored = localStorage.getItem('xkytimer_solves');
-                if (stored) {
-                    allSolves = JSON.parse(stored);
-                }
-            } catch (e) {
-                allSolves = [];
-            }
-        }
-
-        function saveToLocalStorage() {
-            localStorage.setItem('xkytimer_solves', JSON.stringify(allSolves));
-        }
-
-        // --- Scramble Generation ---
-        function generateScramble() {
-            const faces = ['U', 'D', 'L', 'R', 'F', 'B'];
-            const modifiers = ['', "'", '2'];
-            let scramble = [];
-            let lastFace = '';
-
-            for (let i = 0; i < 20; i++) {
-                let face;
-                do { face = faces[Math.floor(Math.random() * faces.length)]; } while (face === lastFace);
-                lastFace = face;
-                let modifier = modifiers[Math.floor(Math.random() * modifiers.length)];
-                scramble.push(face + modifier);
-            }
-            return scramble.join(' ');
-        }
-
-        function navigateScramble(direction) {
-            if (direction === 1) {
-                currentScrambleIndex++;
-                if (currentScrambleIndex >= scramblesHistory.length) {
-                    scramblesHistory.push(generateScramble());
-                }
-            } else if (direction === -1) {
-                if (currentScrambleIndex > 0) currentScrambleIndex--;
-            }
-            
-            scrambleDisplay.textContent = scramblesHistory[currentScrambleIndex];
-            btnPrevScramble.disabled = currentScrambleIndex === 0;
-        }
-
-        // --- Formatting & Stats ---
-        function formatTime(ms) {
-            if (!ms || ms === Infinity || isNaN(ms)) return '--';
-            let totalSeconds = ms / 1000;
-            let minutes = Math.floor(totalSeconds / 60);
-            let seconds = Math.floor(totalSeconds % 60);
-            let milliseconds = Math.floor((ms % 1000));
-
-            let timeString = minutes > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${seconds}`;
-            timeString += `.${milliseconds.toString().padStart(3, '0')}`;
-            return timeString;
-        }
-
-        function updateBestHistoryHighlight() {
-            if (!bestHistoryHighlight) return;
-            if (allSolves.length === 0) {
-                bestHistoryHighlight.style.display = 'none';
-                return;
-            }
-
-            let bestSolve = allSolves[0];
-            let bestSolveIndex = 0;
-
-            for (let i = 1; i < allSolves.length; i++) {
-                if (allSolves[i].timeMs < bestSolve.timeMs) {
-                    bestSolve = allSolves[i];
-                    bestSolveIndex = i;
-                }
-            }
-
-            const solveNum = bestSolveIndex + 1; 
-            
-            document.getElementById('best-history-label').textContent = `Solve ${solveNum}`;
-            document.getElementById('best-history-time').textContent = bestSolve.timeStr;
-            document.getElementById('best-history-scramble').textContent = bestSolve.scramble;
-            
-            bestHistoryHighlight.style.display = 'block';
-        }
-
-        function updateStatsUI() {
-            const sessionMin = sessionSolves.length > 0 ? Math.min(...sessionSolves.map(s => s.timeMs)) : Infinity;
-            const allTimeMin = allSolves.length > 0 ? Math.min(...allSolves.map(s => s.timeMs)) : Infinity;
-
-            let sessionAvg = Infinity;
-            if (sessionSolves.length > 0) {
-                const totalMs = sessionSolves.reduce((sum, solve) => sum + solve.timeMs, 0);
-                sessionAvg = totalMs / sessionSolves.length;
-            }
-
-            sessionBestDisplay.textContent = sessionMin !== Infinity ? formatTime(sessionMin) : '--';
-            sessionAverageDisplay.textContent = sessionAvg !== Infinity ? formatTime(sessionAvg) : '--';
-            allTimeBestDisplay.textContent = allTimeMin !== Infinity ? formatTime(allTimeMin) : '--';
-            
-            updateBestHistoryHighlight();
-        }
-
-        function renderSolveHistory() {
-            timesList.innerHTML = '';
-            const displaySolves = [...allSolves].reverse();
-            
-            displaySolves.forEach((solve, index) => {
-                const li = document.createElement('li');
-                const solveNum = displaySolves.length - index; 
-                
-                li.innerHTML = `
-                    <div class="solve-header">
-                        <span>Solve ${solveNum}</span>
-                        <span style="color: #00e676; font-weight: bold;">${solve.timeStr}</span>
-                    </div>
-                    <div class="solve-scramble">${solve.scramble}</div>
-                `;
-                timesList.appendChild(li);
-            });
-        }
-
-        // --- Timer Control Functions ---
-        function handleTimerPressDown() {
-            if (state === 'idle') {
-                state = 'waiting';
-                timerDisplay.classList.add('waiting');
-                timerDisplay.classList.remove('stopped', 'ready');
-                timerDisplay.textContent = '0.000';
-
-                // Start the 1.5 second hold requirement
-                holdTimeout = setTimeout(() => {
-                    if (state === 'waiting') {
-                        state = 'ready';
-                        timerDisplay.classList.remove('waiting');
-                        timerDisplay.classList.add('ready');
-                    }
-                }, HOLD_REQUIRED_MS);
-            }
-        }
-
-        function handleTimerReleaseUp() {
-            if (state === 'waiting') {
-                // Released too early! Cancel the start.
-                clearTimeout(holdTimeout);
-                state = 'idle';
-                timerDisplay.classList.remove('waiting');
-            } else if (state === 'ready') {
-                // Held long enough, start the timer!
-                state = 'running';
-                timerDisplay.classList.remove('ready');
-                startTime = performance.now();
-                animationFrameId = requestAnimationFrame(updateTimer);
-            }
-        }
-
-        function handleTimerStop() {
-            if (state === 'running') {
-                state = 'idle';
-                cancelAnimationFrame(animationFrameId);
-                const finalTimeMs = performance.now() - startTime;
-                const formattedFinal = formatTime(finalTimeMs);
-
-                timerDisplay.textContent = formattedFinal;
-                timerDisplay.classList.add('stopped');
-
-                recordSolve(finalTimeMs, formattedFinal);
-            }
-        }
-
-        function updateTimer() {
-            const currentTime = performance.now() - startTime;
-            timerDisplay.textContent = formatTime(currentTime);
-            animationFrameId = requestAnimationFrame(updateTimer);
-        }
-
-        function recordSolve(finalTimeMs, formattedFinal) {
-            const solveData = {
-                id: Date.now(),
-                timeMs: finalTimeMs,
-                timeStr: formattedFinal,
-                scramble: scramblesHistory[currentScrambleIndex],
-                date: new Date().toISOString()
-            };
-
-            sessionSolves.push(solveData);
-            allSolves.push(solveData);
-            
-            saveToLocalStorage();
-            updateStatsUI();
-            renderSolveHistory();
-            
-            navigateScramble(1);
-        }
-
-        // --- Import / Export / Clear Features ---
-        function clearSession() {
-            const confirmClear = confirm("Are you sure you want to clear all recorded solves? This cannot be undone.");
-            if (confirmClear) {
-                allSolves = [];
-                sessionSolves = [];
-                localStorage.removeItem('xkytimer_solves');
-                updateStatsUI();
-                renderSolveHistory();
-            }
-        }
-
-        function exportData() {
-            if (allSolves.length === 0) return alert("No solves to export.");
-            
-            const exportObj = {
-                metadata: { exportedAt: new Date().toISOString(), app: "xkytimer" },
-                solves: allSolves
-            };
-
-            const dataStr = JSON.stringify(exportObj, null, 2);
-            const blob = new Blob([dataStr], { type: "text/plain" });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `xkytimer_session_${new Date().toISOString().split('T')[0]}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            event.target.value = '';
-
-            const now = Date.now();
-            if (now - lastImportTime < IMPORT_COOLDOWN_MS) {
-                return alert("Please wait a few seconds before importing again.");
-            }
-            lastImportTime = now;
-
-            if (!file.name.toLowerCase().endsWith('.txt')) {
-                return alert("Security Error: Only .txt files are allowed.");
-            }
-
-            if (file.size > 1024 * 1024) {
-                return alert("Security Error: File is too large (max 1MB).");
-            }
-
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                try {
-                    const parsed = JSON.parse(e.target.result);
-                    if (!parsed.solves || !Array.isArray(parsed.solves)) {
-                        throw new Error("Invalid format");
-                    }
-
-                    const existingIds = new Set(allSolves.map(s => s.id));
-                    let addedCount = 0;
-
-                    parsed.solves.forEach(solve => {
-                        if (!existingIds.has(solve.id)) {
-                            allSolves.push(solve);
-                            addedCount++;
-                        }
-                    });
-
-                    if (addedCount > 0) {
-                        allSolves.sort((a, b) => a.id - b.id);
-                        saveToLocalStorage();
-                        updateStatsUI();
-                        renderSolveHistory();
-                        alert(`Successfully imported ${addedCount} new solves!`);
-                    } else {
-                        alert("No new solves found in file (duplicates ignored).");
-                    }
-
-                } catch (error) {
-                    alert("Failed to parse file. Ensure it is a valid xkytimer export .txt file.");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        // --- Input Event Listeners (Keyboard & Touch) ---
-        function isInteractiveElement(element) {
-            return element.tagName === 'BUTTON' || 
-                   element.tagName === 'INPUT' || 
-                   element.closest('button') !== null ||
-                   element.closest('#times-container') !== null; // Allow scrolling the history list
-        }
-
-        window.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
-            if (e.code === 'Space') {
-                e.preventDefault();
-                if (e.repeat) return;
-                handleTimerPressDown();
-            }
-            
-            if (state === 'running') {
-                handleTimerStop();
-            }
-        });
-
-        window.addEventListener('keyup', (e) => {
-            if (e.code === 'Space') {
-                handleTimerReleaseUp();
-            }
-        });
-
-        // --- BULLETPROOF TOUCH LOGIC ---
-        let ignoreTouchesUntilClear = false; 
-
-        window.addEventListener('touchstart', (e) => {
-            if (isInteractiveElement(e.target)) return;
-
-            // This aggressively stops the browser from thinking you want to scroll
-            e.preventDefault(); 
-
-            if (state === 'running') {
-                handleTimerStop();
-                ignoreTouchesUntilClear = true; 
-            } else if (state === 'idle' && !ignoreTouchesUntilClear) {
-                handleTimerPressDown();
-            }
-        }, { passive: false });
-
-        window.addEventListener('touchmove', (e) => {
-            if (isInteractiveElement(e.target)) return;
-            // No matter how much your fingers slide on the background, 
-            // DO NOT scroll, and DO NOT cancel the timer. Just hold it.
-            e.preventDefault();
-        }, { passive: false });
-
-        window.addEventListener('touchend', (e) => {
-            if (isInteractiveElement(e.target)) return;
-            e.preventDefault();
-            
-            if (e.touches.length === 0) {
-                if (state === 'waiting' || state === 'ready') {
-                    handleTimerReleaseUp();
-                }
-                ignoreTouchesUntilClear = false;
-            }
-        }, { passive: false });
-
-        // Handle edge cases where a system popup interrupts the touch
-        window.addEventListener('touchcancel', (e) => {
-            if (isInteractiveElement(e.target)) return;
-            
-            if (state === 'waiting' || state === 'ready') {
-                clearTimeout(holdTimeout);
-                state = 'idle';
-                timerDisplay.classList.remove('waiting', 'ready');
-                timerDisplay.textContent = '0.000';
-            }
-            
-            if (e.touches.length === 0) {
-                ignoreTouchesUntilClear = false;
-            }
-        });
-
-        // --- Prevent Default Browser Behaviors ---
-        window.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-        window.addEventListener('dragstart', function (e) { e.preventDefault(); });
-        window.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'c' || e.key === 'x')) {
-                e.preventDefault();
-            }
-        });
-
-        init();
-    </script>
 </body>
 </html>
