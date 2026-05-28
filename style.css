@@ -156,7 +156,7 @@
         /* Timer States */
         .ready { color: #00e676 !important; }
         .waiting { color: #ff9800 !important; }
-        .stopped { color: #ff5252 !important; }
+        .stopped { color: #51ff00 !important; }
         .inspecting { color: #fdd835 !important; }
 
         /* Big Timer Gap Display */
