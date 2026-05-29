@@ -14,7 +14,6 @@
     <header>
           <h1 class="header-title">Xkytimer - Speedcube Timer</h1>
         <div class="header-controls">
-            <p>Timer Stop Option :</p>
             <select id="stop-type" onchange="this.blur()">
                 <option value="any">Stop with Any Key / Click</option>
                 <option value="space">Stop with Space / Click</option>
@@ -38,17 +37,29 @@
         </div>
     </header>
 
-    <div class="scramble-section">
-        <div class="scramble-label">Scramble</div>
+   <div class="scramble-section">
+        <div class="scramble-label-container">
+            <div class="scramble-label" style="margin-bottom: 0;">Scramble</div>
+            <div class="hint-wrapper">
+                <span id="scramble-hint-icon">ⓘ</span>
+                <div id="scramble-hint-popup">
+                    Make sure the <b>White</b> face is UP and the <b>Green</b> face is facing YOU when you scramble.
+                </div>
+            </div>
+        </div>
+        <div id="scramble-draw"></div><button id="btn-toggle-draw" onclick="toggleScrambleDraw()">Hide Draw</button>
         <div class="scramble-container">
             <button id="btn-prev-scramble" onclick="navigateScramble(-1)" disabled>&lt; Prev</button>
             <div id="scramble">Loading...</div>
             <button id="btn-next-scramble" onclick="navigateScramble(1)">Next &gt;</button>
         </div>
+        
+              
     </div>
 
     <div id="timer">0.000</div>
     <div class="hint">Hold Spacebar, Click, or Touch to ready. Release to start.<br>Tap to stop. (Alt+Z deletes last solve)</div>
+   
 
     <div class="stats-container">
         <div class="stat-box">
