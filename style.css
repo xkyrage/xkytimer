@@ -140,7 +140,6 @@
 
         .btn-danger:hover { background: #4a1a1a; border-color: #ff5252; color: #ffdddd; }
 
-        /* --- SCRAMBLE HINT POPUP --- */
         .scramble-label-container {
             display: flex;
             align-items: center;
@@ -189,7 +188,6 @@
             letter-spacing: normal;
         }
 
-        /* The little triangle pointer pointing down to the icon */
         #scramble-hint-popup::before {
             content: '';
             position: absolute;
@@ -211,37 +209,36 @@
             border-color: #1a1a1a transparent transparent transparent;
         }
 
-        /* Class added by JavaScript to show the popup */
         #scramble-hint-popup.show {
             display: block;
         }
 
 
-                /* --- AESTHETIC SCRAMBLE VISUALIZER --- */
+
         #scramble-draw {
         display: none; 
         
-        /* Placement */
+   
         position: absolute; 
         right: 2rem; 
-        top: 6rem; /* Adjust this slightly if it overlaps your header */
+        top: 6rem; 
         z-index: 10;
         
-        /* The Border & Box */
+  
         background: #1a1a1a;
         padding: 1rem;
         border: 1px solid #444;
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         
-        /* Grid Layout */
+   
         grid-template-columns: repeat(4, 1fr);
         grid-template-rows: repeat(3, 1fr);
         gap: 3px;
         width: 325px; 
         
-        /* Hover Effects */
-        opacity: 0.7; /* Keeps it subtle when you aren't looking at it */
+  
+        opacity: 0.7; 
         transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
@@ -267,7 +264,7 @@
             border-radius: 1px; 
         }
 
-        /* WCA Unfolded Net Positioning */
+  
         #face-U { grid-column: 2; grid-row: 1; }
         #face-L { grid-column: 1; grid-row: 2; }
         #face-F { grid-column: 2; grid-row: 2; }
@@ -275,7 +272,7 @@
         #face-B { grid-column: 4; grid-row: 2; }
         #face-D { grid-column: 2; grid-row: 3; }
 
-        /* Mobile Override: Snap back to center if screen is too narrow */
+  
         @media (max-width: 1000px) {
 
             #btn-toggle-draw.show-on-mobile {
@@ -293,7 +290,7 @@
         }
 
         #btn-toggle-draw {
-            display: none; /* Hidden by default on PC */
+            display: none; 
             margin-top: 1rem;
             background: transparent;
             border: 1px solid #444;
@@ -310,7 +307,7 @@
             color: #fff;
         }
 
-        /* A special class we will use in JS to force-hide the draw */
+   
         #scramble-draw.force-hide {
             display: none !important;
         }

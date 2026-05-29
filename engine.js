@@ -39,11 +39,11 @@
 }
 
 scrambleHintIcon.addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevents the click from instantly bubbling up and closing
+    e.stopPropagation(); 
     scrambleHintPopup.classList.toggle('show');
 });
 
-// Close the popup if the user clicks anywhere else on the screen
+
 document.addEventListener('click', (e) => {
     if (scrambleHintPopup.classList.contains('show') && e.target !== scrambleHintIcon && !scrambleHintPopup.contains(e.target)) {
         scrambleHintPopup.classList.remove('show');
@@ -128,14 +128,14 @@ document.addEventListener('click', (e) => {
             return scramble.join(' ');
         }
         
-        // --- 3x3 Scramble Visualizer ---
+  
 
 
 function drawScramble(scrambleStr) {
-    // Only show the visualizer (and the mobile button) if 3x3 is selected
+  
     if (puzzleSelect.value !== '3x3') {
         scrambleDraw.style.display = 'none';
-        btnToggleDraw.classList.remove('show-on-mobile'); // Hide button
+        btnToggleDraw.classList.remove('show-on-mobile'); 
         return;
     }
     
@@ -544,20 +544,20 @@ function toggleScrambleDraw() {
     scrambleDraw.classList.toggle('force-hide');
     const isHidden = scrambleDraw.classList.contains('force-hide');
     
-    // Change the button text based on the state
+
     btnToggleDraw.textContent = isHidden ? "Show Draw" : "Hide Draw";
     
-    // Remove focus so hitting spacebar later doesn't accidentally click it
+
     btnToggleDraw.blur(); 
 }
 
 
 
 function isInteractiveElement(el, e) {
-    // 1. Always allow interacting with buttons, dropdowns, and our new hint popup
+  
     if (el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT' || 
         el.closest('button') !== null || el.closest('.header-controls') !== null || 
-        el.closest('.hint-wrapper') !== null) { // <--- ADDED THIS LINE
+        el.closest('.hint-wrapper') !== null) { 
         return true;
     }
 
