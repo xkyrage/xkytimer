@@ -552,39 +552,49 @@ function toggleScrambleDraw() {
 }
 
 
-
 function isInteractiveElement(el, e) {
-  
+
     if (el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT' || 
         el.closest('button') !== null || el.closest('.header-controls') !== null || 
-        el.closest('.hint-wrapper') !== null) { 
+        el.closest('.hint-wrapper') !== null) {
         return true;
     }
+
 
     if (typeof state !== 'undefined' && state !== 'idle') {
         return false;
     }
 
 
-    if (el.closest('.stats-container') || el.closest('#times-container') || el.closest('footer')) {
+    if (el.closest('header') || el.closest('.scramble-section') || 
+        el.closest('.stats-container') || el.closest('#times-container') || el.closest('footer')) {
         return true;
     }
 
-
+  
     if (e && (e.type.includes('touch') || e.type.includes('mouse'))) {
         const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+        
+        const timerEl = document.getElementById('timer');
         const statsBox = document.querySelector('.stats-container');
         
+      
         if (statsBox && statsBox.offsetParent !== null) { 
             if (clientY !== undefined && clientY >= statsBox.getBoundingClientRect().top) {
-                return true; // Treat as a scroll
+                return true;
+            }
+        }
+      
+        if (timerEl && timerEl.offsetParent !== null) {
+            if (clientY !== undefined && clientY <= timerEl.getBoundingClientRect().top) {
+                return true; 
             }
         }
     }
 
+
     return false;
 }
-
 window.addEventListener('keydown', (e) => {
     // Notice we pass "e" into isInteractiveElement now
     if (isInteractiveElement(e.target, e) && e.target.tagName !== 'BUTTON') return;
