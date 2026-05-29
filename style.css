@@ -12,6 +12,9 @@
             overflow-x: hidden;
         }
 
+        body, #timer {
+            cursor: pointer; 
+        }
  
         body.no-scroll {
             overflow: hidden !important;
@@ -35,6 +38,8 @@
         body.solving-mode #timer {
             font-size: 10vw; 
         }
+
+
         @media (max-width: 600px) {
             body.solving-mode #timer { font-size: 25vw; }
         }
@@ -51,6 +56,14 @@
             justify-content: space-between;
             align-items: center;
             gap: 1rem;
+        }
+        header, 
+        .scramble-section, 
+        .stats-container, 
+        #times-container, 
+        footer, 
+        .hint {
+            cursor: default; 
         }
 
         .header-title {
@@ -133,6 +146,12 @@
             font-family: inherit;
             transition: background 0.2s, border-color 0.2s;
             white-space: nowrap;
+        }
+
+        button, 
+        select, 
+        #scramble-hint-icon {
+            cursor: pointer;
         }
 
         button:hover { background: #3a3a3a; }
