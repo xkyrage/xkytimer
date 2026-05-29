@@ -6,6 +6,10 @@
         const puzzleSelect = document.getElementById('puzzle-select');
         const inspectionToggle = document.getElementById('wca-inspection');
         const hintDisplay = document.querySelector('.hint');
+        const btnToggleDraw = document.getElementById('btn-toggle-draw');
+        const scrambleHintIcon = document.getElementById('scramble-hint-icon');
+        const scrambleHintPopup = document.getElementById('scramble-hint-popup');
+        const scrambleDraw = document.getElementById('scramble-draw');
 
 
         let state = 'idle'; 
@@ -33,6 +37,18 @@
                  : "Hold Spacebar or Click to ready. Release to start.<br>Tap to stop (Alt+Z deletes last solve)";
     }
 }
+
+scrambleHintIcon.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevents the click from instantly bubbling up and closing
+    scrambleHintPopup.classList.toggle('show');
+});
+
+// Close the popup if the user clicks anywhere else on the screen
+document.addEventListener('click', (e) => {
+    if (scrambleHintPopup.classList.contains('show') && e.target !== scrambleHintIcon && !scrambleHintPopup.contains(e.target)) {
+        scrambleHintPopup.classList.remove('show');
+    }
+});
 
         function init() {
             loadFromLocalStorage();
@@ -111,12 +127,96 @@
 
             return scramble.join(' ');
         }
+        
+        // --- 3x3 Scramble Visualizer ---
 
+
+function drawScramble(scrambleStr) {
+    // Only show the visualizer (and the mobile button) if 3x3 is selected
+    if (puzzleSelect.value !== '3x3') {
+        scrambleDraw.style.display = 'none';
+        btnToggleDraw.classList.remove('show-on-mobile'); // Hide button
+        return;
+    }
+    
+    scrambleDraw.style.display = 'grid';
+    btnToggleDraw.classList.add('show-on-mobile');
+
+    // Standard WCA Colors
+    const state = {
+        U: Array(9).fill('#ffffff'), // White
+        R: Array(9).fill('#ff3b30'), // Red
+        F: Array(9).fill('#34c759'), // Green
+        D: Array(9).fill('#ffcc00'), // Yellow
+        L: Array(9).fill('#ff9500'), // Orange
+        B: Array(9).fill('#007aff')  // Blue
+    };
+
+    // Helper to rotate a single face 90deg clockwise
+    const rotateFace = (face) => {
+        const temp = [...face];
+        face[0] = temp[6]; face[1] = temp[3]; face[2] = temp[0];
+        face[3] = temp[7]; face[4] = temp[4]; face[5] = temp[1];
+        face[6] = temp[8]; face[7] = temp[5]; face[8] = temp[2];
+    };
+
+    // Helper to cycle the edges of adjacent faces
+    const cycle = (a, ai, b, bi, c, ci, d, di) => {
+        for (let i = 0; i < 3; i++) {
+            let temp = state[a][ai[i]];
+            state[a][ai[i]] = state[d][di[i]];
+            state[d][di[i]] = state[c][ci[i]];
+            state[c][ci[i]] = state[b][bi[i]];
+            state[b][bi[i]] = temp;
+        }
+    };
+
+    // Definitions of how each basic move affects the array
+    const moves = {
+        'U': () => { rotateFace(state.U); cycle('F', [0,1,2], 'L', [0,1,2], 'B', [0,1,2], 'R', [0,1,2]); },
+        'D': () => { rotateFace(state.D); cycle('F', [6,7,8], 'R', [6,7,8], 'B', [6,7,8], 'L', [6,7,8]); },
+        'F': () => { rotateFace(state.F); cycle('U', [6,7,8], 'R', [0,3,6], 'D', [2,1,0], 'L', [8,5,2]); },
+        'B': () => { rotateFace(state.B); cycle('U', [2,1,0], 'L', [0,3,6], 'D', [6,7,8], 'R', [8,5,2]); },
+        'R': () => { rotateFace(state.R); cycle('U', [8,5,2], 'B', [0,3,6], 'D', [8,5,2], 'F', [8,5,2]); },
+        'L': () => { rotateFace(state.L); cycle('U', [0,3,6], 'F', [0,3,6], 'D', [0,3,6], 'B', [8,5,2]); }
+    };
+
+    // Apply the scramble string
+    const tokens = scrambleStr.split(' ');
+    tokens.forEach(token => {
+        if (!token) return;
+        const baseMove = token[0];
+        let times = 1;
+        if (token.includes('2')) times = 2;
+        else if (token.includes("'")) times = 3;
+
+        for(let i = 0; i < times; i++) {
+            if (moves[baseMove]) moves[baseMove]();
+        }
+    });
+
+    // Render the state to HTML
+    scrambleDraw.innerHTML = '';
+    ['U', 'L', 'F', 'R', 'B', 'D'].forEach(faceName => {
+        const faceDiv = document.createElement('div');
+        faceDiv.className = 'cube-face';
+        faceDiv.id = 'face-' + faceName;
+        state[faceName].forEach(color => {
+            const sticker = document.createElement('div');
+            sticker.className = 'sticker';
+            sticker.style.backgroundColor = color;
+            faceDiv.appendChild(sticker);
+        });
+        scrambleDraw.appendChild(faceDiv);
+    });
+}
         function changePuzzle() {
             scramblesHistory = [generateScramble(puzzleSelect.value)];
             currentScrambleIndex = 0;
             scrambleDisplay.textContent = scramblesHistory[0];
             btnPrevScramble.disabled = true;
+            
+            drawScramble(scramblesHistory[0]); 
             puzzleSelect.blur();
         }
 
@@ -131,8 +231,9 @@
             }
             scrambleDisplay.textContent = scramblesHistory[currentScrambleIndex];
             btnPrevScramble.disabled = currentScrambleIndex === 0;
+            
+            drawScramble(scramblesHistory[currentScrambleIndex]); // <--- ADD THIS
         }
-
 
         function formatTime(ms) {
             if (!ms || ms === Infinity || isNaN(ms)) return 'DNF';
@@ -437,12 +538,26 @@
         }
 
 
+        
+
+function toggleScrambleDraw() {
+    scrambleDraw.classList.toggle('force-hide');
+    const isHidden = scrambleDraw.classList.contains('force-hide');
+    
+    // Change the button text based on the state
+    btnToggleDraw.textContent = isHidden ? "Show Draw" : "Hide Draw";
+    
+    // Remove focus so hitting spacebar later doesn't accidentally click it
+    btnToggleDraw.blur(); 
+}
+
 
 
 function isInteractiveElement(el, e) {
-
+    // 1. Always allow interacting with buttons, dropdowns, and our new hint popup
     if (el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT' || 
-        el.closest('button') !== null || el.closest('.header-controls') !== null) {
+        el.closest('button') !== null || el.closest('.header-controls') !== null || 
+        el.closest('.hint-wrapper') !== null) { // <--- ADDED THIS LINE
         return true;
     }
 
